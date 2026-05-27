@@ -141,6 +141,10 @@ Public Class Thumbnailer
         Dim imageEPs = New EncoderParameters(1)
         imageEPs.Param(0) = New EncoderParameter(Imaging.Encoder.Quality, imageQuality)
         Dim imageCI = ImageCodecInfo.GetImageEncoders.Where(Function(arg) arg.FormatID = imageFormatGuid).FirstOrDefault
+        If imageCI Is Nothing Then
+            Throw New Exception("Image encoder was not found.")
+        End If
+        Dim imageEncoder = imageCI
 
         Dim imageFilePathWithoutExtension = settings.GetString("ImageFilePathWithoutExtension", "")
         Dim imageFilePath = Macro.Expand(
@@ -267,7 +271,7 @@ Public Class Thumbnailer
             End Using
 
             pToken.ThrowIfCancellationRequested()
-            image.Save(imageFilePath, imageCI, imageEPs)
+            image.Save(imageFilePath, imageEncoder, imageEPs)
         End Using
 
         Return True

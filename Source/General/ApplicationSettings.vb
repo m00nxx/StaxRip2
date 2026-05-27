@@ -395,9 +395,13 @@ Public Class ApplicationSettings
             If profileCategory Is Nothing Then
                 profiles.Add(defaultCategory)
                 WasUpdated = True
-            ElseIf Not profileCategory.Filters.Any() Then
-                profileCategory.Filters.AddRange(defaultCategory.Filters)
-                WasUpdated = True
+            Else
+                Dim profileFilters = profileCategory.Filters
+
+                If profileFilters.Count = 0 Then
+                    profileFilters.AddRange(defaultCategory.Filters)
+                    WasUpdated = True
+                End If
             End If
         Next
     End Sub
