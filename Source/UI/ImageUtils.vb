@@ -35,7 +35,6 @@ Public Class ImageHelp
             Coll.Families.FirstOrDefault(Function(f) f.Name = "Segoe MDL2 Assets"))
 
         If family Is Nothing Then
-            MsgWarn("Correct font was not found, using default instead!")
             family = FontFamily.GenericSerif
         End If
 

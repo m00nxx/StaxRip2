@@ -336,6 +336,8 @@ Public Class ApplicationSettings
             End If
         End If
 
+        EnsureFilterProfilesContainDefaults(AviSynthProfiles, FilterCategory.GetAviSynthDefaults)
+
         If Check(VapourSynthProfiles, "VapourSynth Filter Profiles", 36) Then
             If VapourSynthProfiles Is Nothing Then
                 VapourSynthProfiles = FilterCategory.GetVapourSynthDefaults
@@ -355,6 +357,8 @@ Public Class ApplicationSettings
                 Next
             End If
         End If
+
+        EnsureFilterProfilesContainDefaults(VapourSynthProfiles, FilterCategory.GetVapourSynthDefaults)
 
         If Check(FilterSetupProfiles, "Filter Setup Profiles", 102) Then
             FilterSetupProfiles = VideoScript.GetDefaults
@@ -376,6 +380,26 @@ Public Class ApplicationSettings
         End If
 
         Migrate()
+    End Sub
+
+    Private Sub EnsureFilterProfilesContainDefaults(ByRef profiles As List(Of FilterCategory), defaults As List(Of FilterCategory))
+        If profiles Is Nothing OrElse profiles.Count = 0 Then
+            profiles = defaults
+            WasUpdated = True
+            Return
+        End If
+
+        For Each defaultCategory In defaults
+            Dim profileCategory = profiles.FirstOrDefault(Function(category) category.Name = defaultCategory.Name)
+
+            If profileCategory Is Nothing Then
+                profiles.Add(defaultCategory)
+                WasUpdated = True
+            ElseIf Not profileCategory.Filters.Any() Then
+                profileCategory.Filters.AddRange(defaultCategory.Filters)
+                WasUpdated = True
+            End If
+        Next
     End Sub
 
     Sub Migrate()

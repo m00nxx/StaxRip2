@@ -808,7 +808,7 @@ Module StringExtensions
 
     <Extension()>
     Function SplitLinesNoEmpty(value As String) As String()
-        Return SplitNoEmpty(value, Environment.NewLine)
+        Return value.Split({Microsoft.VisualBasic.ControlChars.CrLf, Microsoft.VisualBasic.ControlChars.Lf, Microsoft.VisualBasic.ControlChars.Cr}, StringSplitOptions.RemoveEmptyEntries)
     End Function
 
     <Extension()>

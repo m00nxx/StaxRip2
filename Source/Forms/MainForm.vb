@@ -2248,9 +2248,9 @@ Partial Public Class MainForm
     End Function
 
     Sub AddSourceFilters(filterNames As String(), filters As List(Of VideoFilter))
-        Dim avsProfiles = s.AviSynthProfiles.Where(Function(cat) cat.Name = "Source").First.Filters
-        Dim vsProfiles = s.VapourSynthProfiles.Where(Function(cat) cat.Name = "Source").First.Filters
-        Dim allFilters = avsProfiles.Concat(vsProfiles)
+        Dim avsProfiles = s.AviSynthProfiles?.FirstOrDefault(Function(cat) cat.Name = "Source")?.Filters
+        Dim vsProfiles = s.VapourSynthProfiles?.FirstOrDefault(Function(cat) cat.Name = "Source")?.Filters
+        Dim allFilters = If(avsProfiles, New List(Of VideoFilter)).Concat(If(vsProfiles, New List(Of VideoFilter)))
 
         For Each f In allFilters
             For Each filterName In filterNames
@@ -3042,6 +3042,24 @@ Partial Public Class MainForm
         skipNonAnyExtension As Boolean,
         skipNonAnyFormat As Boolean)
 
+        If sourceFilter Is Nothing OrElse preferences Is Nothing OrElse sourceFilter.Script Is Nothing OrElse sourceFilter.Script.Contains("(") Then
+            Exit Sub
+        End If
+
+        Dim sourceCategory = profiles?.FirstOrDefault(Function(cat) cat.Name = "Source")
+
+        If sourceCategory Is Nothing Then
+            If p.Script.IsAviSynth Then
+                sourceCategory = FilterCategory.GetAviSynthDefaults().FirstOrDefault(Function(cat) cat.Name = "Source")
+            Else
+                sourceCategory = FilterCategory.GetVapourSynthDefaults().FirstOrDefault(Function(cat) cat.Name = "Source")
+            End If
+        End If
+
+        If sourceCategory Is Nothing Then
+            Exit Sub
+        End If
+
         If Not sourceFilter.Script.Contains("(") Then
             For Each pref In preferences
                 Dim extensions = pref.Name.SplitNoEmptyAndWhiteSpace({",", " ", ";"})
@@ -3063,9 +3081,7 @@ Partial Public Class MainForm
                     If (extension = p.SourceFile.Ext OrElse extension = "*") AndAlso
                         (format = "*" OrElse format = MediaInfo.GetVideo(p.SourceFile, "Format").ToLowerInvariant) Then
 
-                        Dim filters = profiles.Where(
-                            Function(cat) cat.Name = "Source").First.Filters.Where(
-                            Function(cat) cat.Name = pref.Value)
+                        Dim filters = sourceCategory.Filters.Where(Function(cat) cat.Name = pref.Value)
 
                         If filters.Count > 0 Then
                             p.Script.SetFilter("Source", filters(0).Name, filters(0).Script)

@@ -48,6 +48,9 @@ $applicationSettings = Read-RepoFile "Source/General/ApplicationSettings.vb"
 Assert-Contains $applicationSettings "Fonts = If(Fonts, New Dictionary(Of FontCategory, String))" "Fresh settings initialization must tolerate missing font settings."
 Assert-Contains $applicationSettings "If AudioProfiles Is Nothing Then Return" "Settings migration must tolerate missing audio profiles."
 Assert-Contains $applicationSettings "ap?.Migrate()" "Settings migration must skip null audio profile entries."
+Assert-Contains $applicationSettings "EnsureFilterProfilesContainDefaults(AviSynthProfiles, FilterCategory.GetAviSynthDefaults)" "Corrupt AviSynth filter profile settings must be repaired from defaults."
+Assert-Contains $applicationSettings "EnsureFilterProfilesContainDefaults(VapourSynthProfiles, FilterCategory.GetVapourSynthDefaults)" "Corrupt VapourSynth filter profile settings must be repaired from defaults."
+Assert-Contains $applicationSettings "If profiles Is Nothing OrElse profiles.Count = 0 Then" "Empty filter profile settings must be rebuilt."
 
 $general = Read-RepoFile "Source/General/General.vb"
 Assert-Contains $general 'Software\StaxRip2\SettingsLocation' "Settings directory selection must use the StaxRip2 registry key."
@@ -61,6 +64,9 @@ Assert-NotContains $general "DeserializeTrace.log" "Temporary deserialization tr
 
 $filtersListView = Read-RepoFile "Source/Controls/FiltersListView.vb"
 Assert-NotContains $filtersListView "FiltersLoadTrace.log" "Temporary filter loading trace logging must not be committed."
+
+$extensions = Read-RepoFile "Source/General/Extensions.vb"
+Assert-Contains $extensions "Return value.Split({Microsoft.VisualBasic.ControlChars.CrLf, Microsoft.VisualBasic.ControlChars.Lf, Microsoft.VisualBasic.ControlChars.Cr}, StringSplitOptions.RemoveEmptyEntries)" "Line splitting must handle LF-only embedded text resources."
 
 $solution = Read-RepoFile "Source/StaxRip.sln"
 Assert-Contains $solution "Release|x64.ActiveCfg = Release|x64" "Release x64 must build the Release configuration."
@@ -86,6 +92,16 @@ Assert-Contains $mainForm 'https://github.com/m00nxx/StaxRip2/issues/new/choose'
 Assert-Contains $mainForm 'Startup template failed to load' "Startup template load failures must not recurse indefinitely."
 Assert-Contains $mainForm 'Startup template failed to initialize' "Startup template initialization failures must not recurse indefinitely."
 Assert-Contains $mainForm 'Return OpenProject(startupTemplatePath, False)' "Startup template fallback must bypass save-current recursion."
+Assert-NotContains $mainForm 'Function(cat) cat.Name = "Source").First.Filters' "Source filter lookup must tolerate missing Source profile categories."
+Assert-Contains $mainForm 'Dim sourceCategory = profiles?.FirstOrDefault(Function(cat) cat.Name = "Source")' "Source filter lookup must use a nullable category lookup."
+Assert-Contains $mainForm 'sourceCategory = FilterCategory.GetVapourSynthDefaults().FirstOrDefault(Function(cat) cat.Name = "Source")' "Source filter lookup must fall back to built-in VapourSynth defaults."
+Assert-NotContains $mainForm "ModifyFiltersTrace.log" "Temporary source filter trace logging must not be committed."
+
+$globalClassSource = Read-RepoFile "Source/General/GlobalClass.vb"
+Assert-NotContains $globalClassSource "StaxRip2ExceptionTrace.log" "Temporary exception trace logging must not be committed."
+
+$imageUtils = Read-RepoFile "Source/UI/ImageUtils.vb"
+Assert-NotContains $imageUtils 'MsgWarn("Correct font was not found, using default instead!")' "Missing icon fonts must not show a startup warning dialog."
 
 $readme = Read-RepoFile "README.md"
 Assert-Contains $readme "[Building from source](BUILDING.md)" "README must link to source build instructions."
