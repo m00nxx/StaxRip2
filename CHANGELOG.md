@@ -4,10 +4,17 @@
 Unreleased
 ----------
 
+- Hardened binary serialization through a centralized formatter factory with an allow-list binder.
+- Fixed mutex handling for settings, profile, and event serialization so acquired mutexes are always released.
+- Fixed update release detection for multi-digit StaxRip2 version components.
+- Hardened tool updates so download-page failures are handled instead of escaping from `Async Sub`.
+- Repaired partially missing source filter defaults inside existing filter profile categories.
 - Optimized release packaging by pruning excluded runtime directories before recursive copy.
 - Made release archive readiness timeouts configurable for large local packages and smoke checks.
 - Cached source video format lookup while matching source filter preferences and reduced redundant filter enumeration.
 - Simplified package smoke archive listing through a single 7-Zip resolver.
+- Delegated legacy build helper scripts to the maintained release packaging script.
+- Aligned GitHub Actions MSBuild discovery and build documentation with the maintained release script behavior.
 
 v0.1.1 (2026-05-27)
 -------------------

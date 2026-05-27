@@ -399,8 +399,17 @@ Public Class ApplicationSettings
                 Dim profileFilters = profileCategory.Filters
 
                 If profileFilters.Count = 0 Then
-                    profileFilters.AddRange(defaultCategory.Filters)
+                    profileFilters.AddRange(defaultCategory.Filters.Select(Function(filter) filter.GetCopy()))
                     WasUpdated = True
+                Else
+                    Dim existingScripts = New HashSet(Of String)(profileFilters.Select(Function(filter) filter.Script))
+
+                    For Each defaultFilter In defaultCategory.Filters
+                        If Not existingScripts.Contains(defaultFilter.Script) Then
+                            profileFilters.Add(defaultFilter.GetCopy())
+                            WasUpdated = True
+                        End If
+                    Next
                 End If
             End If
         Next

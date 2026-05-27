@@ -2903,11 +2903,16 @@ Partial Public Class MainForm
         End If
 
         Dim sourceFilter = p.Script.GetFilter("Source")
+        Dim sourceFormat = MediaInfo.GetVideo(p.SourceFile, "Format")
 
-        SetSourceFilter(sourceFilter, preferences, profiles, True, True, False, False)
-        SetSourceFilter(sourceFilter, preferences, profiles, False, True, True, False)
-        SetSourceFilter(sourceFilter, preferences, profiles, True, False, False, True)
-        SetSourceFilter(sourceFilter, preferences, profiles, False, False, False, False)
+        If Not String.IsNullOrWhiteSpace(sourceFormat) Then
+            sourceFormat = sourceFormat.ToLowerInvariant
+        End If
+
+        SetSourceFilter(sourceFilter, preferences, profiles, sourceFormat, True, True, False, False)
+        SetSourceFilter(sourceFilter, preferences, profiles, sourceFormat, False, True, True, False)
+        SetSourceFilter(sourceFilter, preferences, profiles, sourceFormat, True, False, False, True)
+        SetSourceFilter(sourceFilter, preferences, profiles, sourceFormat, False, False, False, False)
 
         If editAVS Then
             If Not sourceFilter.Script.Contains("(") Then
@@ -3037,6 +3042,7 @@ Partial Public Class MainForm
         sourceFilter As VideoFilter,
         preferences As StringPairList,
         profiles As List(Of FilterCategory),
+        sourceFormat As String,
         skipAnyExtension As Boolean,
         skipAnyFormat As Boolean,
         skipNonAnyExtension As Boolean,
@@ -3061,7 +3067,6 @@ Partial Public Class MainForm
         End If
 
         Dim sourceFilters = If(sourceCategory.Filters, New List(Of VideoFilter))
-        Dim sourceFormat As String = Nothing
 
         If Not sourceFilter.Script.Contains("(") Then
             For Each pref In preferences
@@ -3084,11 +3089,7 @@ Partial Public Class MainForm
                     If extension = p.SourceFile.Ext OrElse extension = "*" Then
                         Dim formatMatches = format = "*"
 
-                        If Not formatMatches Then
-                            If sourceFormat Is Nothing Then
-                                sourceFormat = MediaInfo.GetVideo(p.SourceFile, "Format").ToLowerInvariant
-                            End If
-
+                        If Not formatMatches AndAlso Not String.IsNullOrWhiteSpace(sourceFormat) Then
                             formatMatches = format = sourceFormat
                         End If
 

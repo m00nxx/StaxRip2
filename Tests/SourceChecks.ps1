@@ -53,6 +53,9 @@ Assert-NotContains $globalClass '"staxrip audio profiles file"' "Audio profile m
 Assert-NotContains $globalClass '"staxrip video encoder profiles file"' "Video encoder profile mutex must not be shared with upstream StaxRip."
 Assert-NotContains $globalClass '"staxrip events file"' "Event command mutex must not be shared with upstream StaxRip."
 Assert-NotContains $globalClass 'Process.GetProcessesByName("StaxRip")' "Process checks must not use the upstream executable name."
+Assert-Contains $globalClass "Private Sub SerializeWithMutex" "Profile and event saves must release mutexes in finally blocks."
+Assert-Contains $globalClass "If mutexAcquired Then mutex.ReleaseMutex()" "Mutex-protected settings/profile writes must always release acquired mutexes."
+Assert-NotContains $globalClass "formatter As New BinaryFormatter" "Profile and event serialization must use the guarded formatter factory."
 
 $applicationSettings = Read-RepoFile "Source/General/ApplicationSettings.vb"
 Assert-Contains $applicationSettings "Fonts = If(Fonts, New Dictionary(Of FontCategory, String))" "Fresh settings initialization must tolerate missing font settings."
@@ -62,6 +65,8 @@ Assert-Contains $applicationSettings "EnsureFilterProfilesContainDefaults(AviSyn
 Assert-Contains $applicationSettings "EnsureFilterProfilesContainDefaults(VapourSynthProfiles, FilterCategory.GetVapourSynthDefaults)" "Corrupt VapourSynth filter profile settings must be repaired from defaults."
 Assert-Contains $applicationSettings "If profiles Is Nothing OrElse profiles.Count = 0 Then" "Empty filter profile settings must be rebuilt."
 Assert-Contains $applicationSettings "Dim profileFilters = profileCategory.Filters" "Settings migration must normalize filter lists through the safe property getter."
+Assert-Contains $applicationSettings "Dim existingScripts = New HashSet(Of String)(profileFilters.Select(Function(filter) filter.Script))" "Filter profile repair must detect missing default filters inside existing categories."
+Assert-Contains $applicationSettings "For Each defaultFilter In defaultCategory.Filters" "Filter profile repair must add missing default filters inside existing categories."
 Assert-NotContains $applicationSettings "profileCategory.Filters.Any()" "Settings migration must not call Any on possibly null filter lists."
 
 $general = Read-RepoFile "Source/General/General.vb"
@@ -76,6 +81,9 @@ Assert-Contains $general 'auto.Script.Filters(0) = If(VideoFilter.GetDefault("So
 Assert-Contains $general 'manual.Script.Filters(0) = If(VideoFilter.GetDefault("Source", "Manual"), manual.Script.Filters(0))' "Manual workflow templates must not serialize a null source filter."
 Assert-Contains $general "Dim settingsFileExists = File.Exists(path)" "Fresh settings initialization must track whether a settings file existed."
 Assert-Contains $general "If settingsFileExists AndAlso safeInstance.WasUpdated AndAlso TypeOf DirectCast(instance, Object) Is ApplicationSettings Then" "Project/template deserialization must not immediately reserialize migrated projects."
+Assert-Contains $general "Shared Function CreateFormatter() As BinaryFormatter" "BinaryFormatter use must be centralized behind a guarded factory."
+Assert-Contains $general "SafeSerializationBinder" "BinaryFormatter deserialization must use an allow-list binder."
+Assert-NotContains $general "Dim bf As New BinaryFormatter" "Safe serialization must not instantiate unguarded BinaryFormatter instances."
 Assert-NotContains $general "DeserializeTrace.log" "Temporary deserialization trace logging must not be committed."
 
 $filtersListView = Read-RepoFile "Source/Controls/FiltersListView.vb"
@@ -102,6 +110,8 @@ $updateChecker = Read-RepoFile "Source/General/StaxRipUpdate.vb"
 Assert-Contains $updateChecker 'api.github.com/repos/m00nxx/StaxRip2/releases?per_page=5' "Update checks must target the StaxRip2 fork releases."
 Assert-NotContains $updateChecker 'api.github.com/repos/staxrip/staxrip/releases?per_page=5' "Update checks must not target upstream StaxRip releases."
 Assert-Contains $updateChecker "Would you like StaxRip2 to check for updates periodically?" "Update prompts must identify the fork."
+Assert-Contains $updateChecker "(?<tag>v\d+\.\d+\.\d+" "Update checks must support multi-digit version components."
+Assert-Contains $updateChecker "(?<version>\d+\.\d+\.\d+" "Update asset matching must support multi-digit version components."
 
 $mainForm = Read-RepoFile "Source/Forms/MainForm.vb"
 Assert-Contains $mainForm 'https://github.com/m00nxx/StaxRip2' "Help menu must point to the StaxRip2 repository."
@@ -115,7 +125,10 @@ Assert-Contains $mainForm 'Dim sourceCategory = profiles?.FirstOrDefault(Functio
 Assert-Contains $mainForm 'sourceCategory = FilterCategory.GetVapourSynthDefaults().FirstOrDefault(Function(cat) cat.Name = "Source")' "Source filter lookup must fall back to built-in VapourSynth defaults."
 Assert-Contains $mainForm "Dim sourceFilters = If(sourceCategory.Filters, New List(Of VideoFilter))" "Source filter preference matching must tolerate null filter lists."
 Assert-NotContains $mainForm "sourceCategory.Filters.Where" "Source filter preference matching must not query possibly null filter lists."
-Assert-Contains $mainForm "Dim sourceFormat As String = Nothing" "Source filter preference matching must cache the source format outside nested loops."
+Assert-NotContains $mainForm "MediaInfo.GetVideo(p.SourceFile, ""Format"").ToLowerInvariant" "Source filter preference matching must not query MediaInfo inside nested loops."
+Assert-Contains $mainForm "Dim sourceFormat = MediaInfo.GetVideo(p.SourceFile, ""Format"")" "ModifyFilters must compute source video format once per pass."
+Assert-Contains $mainForm "SetSourceFilter(sourceFilter, preferences, profiles, sourceFormat" "Source filter matching must reuse the cached source format."
+Assert-Contains $mainForm "If Not String.IsNullOrWhiteSpace(sourceFormat) Then" "Source filter format matching must tolerate missing MediaInfo values."
 Assert-Contains $mainForm "Dim matchedFilter = sourceFilters.FirstOrDefault(Function(cat) cat.Name = pref.Value)" "Source filter preference matching must avoid repeated filter enumeration."
 Assert-NotContains $mainForm "sourceFilters.Where(Function(cat) cat.Name = pref.Value)" "Source filter preference matching must not enumerate source filters more than needed."
 Assert-NotContains $mainForm "ModifyFiltersTrace.log" "Temporary source filter trace logging must not be committed."
@@ -149,6 +162,8 @@ Assert-NotContains $imageUtils 'MsgWarn("Correct font was not found, using defau
 
 $toolUpdate = Read-RepoFile "Source/General/ToolUpdate.vb"
 Assert-Contains $toolUpdate "Application.ProductName" "Tool update dialogs must identify the current product."
+Assert-Contains $toolUpdate "Async Function UpdateAsync() As Task" "Tool updates must expose an awaitable update task."
+Assert-Contains $toolUpdate "Catch ex As Exception" "Tool update network failures must be handled."
 Assert-NotContains $toolUpdate '"StaxRip", MessageBoxButtons.OKCancel' "Tool update dialogs must not hardcode upstream branding."
 
 $documentation = Read-RepoFile "Source/General/Documentation.vb"
@@ -232,12 +247,16 @@ Assert-Contains $buildDocs "Source/Release.ps1" "Build docs must document full r
 Assert-Contains $buildDocs "StaxRip2-v0.1.1-x64.7z" "Build docs must document the v0.1.1 release archive name."
 Assert-Contains $buildDocs "Source/bin/Apps" "Build docs must document required packaged runtime apps."
 Assert-Contains $buildDocs "Source/bin/Fonts" "Build docs must document required packaged fonts."
+Assert-Contains $buildDocs "Source/bin/Fonts/Icons" "Build docs must document the actual packaged icon font location."
+Assert-NotContains $buildDocs "Source/bin/Icons" "Build docs must not document a non-validated icon folder."
 Assert-Contains $buildDocs "-CompressionLevel 0..9" "Build docs must document release compression tuning."
 
 $workflow = Read-RepoFile ".github/workflows/build.yml"
 Assert-Contains $workflow "windows-latest" "GitHub Actions build must run on Windows."
 Assert-Contains $workflow "actions/checkout@v6.0.2" "GitHub Actions build must use a Node 24 compatible checkout action."
 Assert-Contains $workflow "vswhere.exe" "GitHub Actions build must locate MSBuild with vswhere."
+Assert-Contains $workflow '-products "*"' "GitHub Actions must quote the vswhere product wildcard."
+Assert-Contains $workflow '(& $vswhere' "GitHub Actions must wrap vswhere invocation before piping its output."
 Assert-Contains $workflow "NuGet/setup-nuget@v4.0" "GitHub Actions build must provision NuGet with a Node 24 compatible action."
 Assert-Contains $workflow "Tests\SourceChecks.ps1" "GitHub Actions build must run source checks."
 Assert-Contains $workflow "Source\StaxRip.vbproj" "GitHub Actions build must build the app project."
@@ -251,6 +270,14 @@ foreach ($buildScriptPath in @("Source/Build.ps1", "Source/BuildAndPack.ps1", "S
     Assert-NotContains $buildScript "StaxRip.exe" "$buildScriptPath must not package the upstream executable."
     Assert-NotContains $buildScript "A:\StaxRip-Releases" "$buildScriptPath must not require the maintainer-specific release drive."
 }
+
+$buildScript = Read-RepoFile "Source/Build.ps1"
+Assert-Contains $buildScript "Source/Release.ps1" "Legacy Build.ps1 must delegate to the maintained release script."
+Assert-Contains $buildScript '& $releaseScript' "Legacy Build.ps1 must invoke the maintained release script directly."
+
+$buildAndPackScript = Read-RepoFile "Source/BuildAndPack.ps1"
+Assert-Contains $buildAndPackScript "Source/Release.ps1" "Legacy BuildAndPack.ps1 must delegate to the maintained release script."
+Assert-Contains $buildAndPackScript '& $releaseScript' "Legacy BuildAndPack.ps1 must invoke the maintained release script directly."
 
 $releaseScript = Read-RepoFile "Source/Release.ps1"
 Assert-Contains $releaseScript "param(" "Release packaging must be configurable from the command line."
@@ -274,6 +301,9 @@ Assert-Contains $smokePackage "function Resolve-SevenZip" "Package smoke checks 
 Assert-Contains $releaseScript '(^|.*[\\/])ManagedCuda\.(pdb|xml)$' "Release packages must exclude top-level ManagedCuda debug metadata."
 Assert-Contains $releaseScript '(^|.*[\\/])System\.Management\.Automation\.xml$' "Release packages must exclude top-level PowerShell XML metadata."
 Assert-Contains $releaseScript "function Wait-FileReady" "Release packaging must wait until the 7z archive is fully written."
+Assert-Contains $releaseScript "If (`$SkipArchive)" "Release packaging must report staging output when archive creation is skipped."
+Assert-Contains $releaseScript "Release staging prepared" "Release packaging skip-archive output must not claim a 7z package exists."
+Assert-Contains $releaseScript "function Join-Argument" "Release packaging must escape 7-Zip command arguments consistently."
 Assert-Contains $releaseScript "Start-Process -FilePath `$sevenZip" "Release packaging must run 7-Zip with explicit process exit handling."
 Assert-Contains $releaseScript "CompressionLevel = 5" "Release packaging must use a practical default compression level."
 Assert-Contains $releaseScript "-mx`$CompressionLevel" "Release packaging compression must be configurable."
@@ -300,5 +330,14 @@ $releaseNotes = Read-RepoFile "RELEASE_NOTES.md"
 Assert-Contains $releaseNotes "# StaxRip2 v0.1.1" "Release notes must identify the v0.1.1 release."
 Assert-Contains $releaseNotes "StaxRip2-v0.1.1-x64.7z" "Release notes must document the full package asset."
 Assert-Contains $releaseNotes "app-only" "Release notes must distinguish CI artifact scope from full packages."
+
+$jobManager = Read-RepoFile "Source/General/JobManager.vb"
+Assert-NotContains $jobManager "formatter As New BinaryFormatter" "Job serialization must use the guarded formatter factory."
+
+$helpSource = Read-RepoFile "Source/General/Help.vb"
+Assert-NotContains $helpSource "New BinaryFormatter" "Object cloning must use the guarded formatter factory."
+
+$themeSource = Read-RepoFile "Source/UI/Theme.vb"
+Assert-NotContains $themeSource "New BinaryFormatter" "Theme serialization must use the guarded formatter factory."
 
 Write-Host "Source checks passed."

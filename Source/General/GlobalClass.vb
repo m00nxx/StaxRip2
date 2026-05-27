@@ -102,11 +102,7 @@ Public Class GlobalClass
 
     Sub SaveSettings()
         Try
-            Using mutex As New Mutex(False, "staxrip2 settings file")
-                mutex.WaitOne()
-                SafeSerialization.Serialize(s, SettingsFile)
-                mutex.ReleaseMutex()
-            End Using
+            RunWithMutex("staxrip2 settings file", Sub() SafeSerialization.Serialize(s, SettingsFile))
 
             Dim backupPath = Path.Combine(Folder.Settings, "Backup")
 
@@ -185,15 +181,7 @@ Public Class GlobalClass
         If Not s?.SaveAudioProfilesSeparately Then Return
 
         Try
-            Dim formatter As New BinaryFormatter
-
-            Using mutex As New Mutex(False, "staxrip2 audio profiles file")
-                mutex.WaitOne()
-                Using stream As New FileStream(AudioProfilesFile, FileMode.Create, FileAccess.Write, FileShare.None)
-                    formatter.Serialize(stream, s.AudioProfiles)
-                End Using
-                mutex.ReleaseMutex()
-            End Using
+            SerializeWithMutex("staxrip2 audio profiles file", AudioProfilesFile, s.AudioProfiles)
         Catch ex As Exception
             g.ShowException(ex)
         End Try
@@ -204,18 +192,7 @@ Public Class GlobalClass
         If Not AudioProfilesFile.FileExists() Then Return
 
         Try
-            Dim formatter As New BinaryFormatter
-            Dim audioProfiles As List(Of AudioProfile)
-
-            Using mutex As New Mutex(False, "staxrip2 audio profiles file")
-                mutex.WaitOne()
-                Using stream As New FileStream(AudioProfilesFile, FileMode.Open, FileAccess.Read, FileShare.Read)
-                    audioProfiles = DirectCast(formatter.Deserialize(stream), List(Of AudioProfile))
-                End Using
-                mutex.ReleaseMutex()
-            End Using
-
-            s.AudioProfiles = audioProfiles
+            s.AudioProfiles = DeserializeWithMutex(Of List(Of AudioProfile))("staxrip2 audio profiles file", AudioProfilesFile)
         Catch ex As Exception
             Using td As New TaskDialog(Of String)
                 td.Title = "Audio Profiles file failed to load!"
@@ -240,15 +217,7 @@ Public Class GlobalClass
         If Not s?.SaveVideoEncoderProfilesSeparately Then Return
 
         Try
-            Dim formatter As New BinaryFormatter
-
-            Using mutex As New Mutex(False, "staxrip2 video encoder profiles file")
-                mutex.WaitOne()
-                Using stream As New FileStream(VideoEncoderProfilesFile, FileMode.Create, FileAccess.Write, FileShare.None)
-                    formatter.Serialize(stream, s.VideoEncoderProfiles)
-                End Using
-                mutex.ReleaseMutex()
-            End Using
+            SerializeWithMutex("staxrip2 video encoder profiles file", VideoEncoderProfilesFile, s.VideoEncoderProfiles)
         Catch ex As Exception
             g.ShowException(ex)
         End Try
@@ -259,18 +228,7 @@ Public Class GlobalClass
         If Not VideoEncoderProfilesFile.FileExists() Then Return
 
         Try
-            Dim formatter As New BinaryFormatter
-            Dim videoEncoderProfiles As List(Of VideoEncoder)
-
-            Using mutex As New Mutex(False, "staxrip2 video encoder profiles file")
-                mutex.WaitOne()
-                Using stream As New FileStream(VideoEncoderProfilesFile, FileMode.Open, FileAccess.Read, FileShare.Read)
-                    videoEncoderProfiles = DirectCast(formatter.Deserialize(stream), List(Of VideoEncoder))
-                End Using
-                mutex.ReleaseMutex()
-            End Using
-
-            s.VideoEncoderProfiles = videoEncoderProfiles
+            s.VideoEncoderProfiles = DeserializeWithMutex(Of List(Of VideoEncoder))("staxrip2 video encoder profiles file", VideoEncoderProfilesFile)
         Catch ex As Exception
             Using td As New TaskDialog(Of String)
                 td.Title = "Video Encoder Profiles file failed to load!"
@@ -295,15 +253,7 @@ Public Class GlobalClass
         If Not s?.SaveEventsSeparately Then Return
 
         Try
-            Dim formatter As New BinaryFormatter
-
-            Using mutex As New Mutex(False, "staxrip2 events file")
-                mutex.WaitOne()
-                Using stream As New FileStream(EventsFile, FileMode.Create, FileAccess.Write, FileShare.None)
-                    formatter.Serialize(stream, s.EventCommands)
-                End Using
-                mutex.ReleaseMutex()
-            End Using
+            SerializeWithMutex("staxrip2 events file", EventsFile, s.EventCommands)
         Catch ex As Exception
             g.ShowException(ex)
         End Try
@@ -314,18 +264,7 @@ Public Class GlobalClass
         If Not EventsFile.FileExists() Then Return
 
         Try
-            Dim formatter As New BinaryFormatter
-            Dim events As List(Of EventCommand)
-
-            Using mutex As New Mutex(False, "staxrip2 events file")
-                mutex.WaitOne()
-                Using stream As New FileStream(EventsFile, FileMode.Open, FileAccess.Read, FileShare.Read)
-                    events = DirectCast(formatter.Deserialize(stream), List(Of EventCommand))
-                End Using
-                mutex.ReleaseMutex()
-            End Using
-
-            s.EventCommands = events
+            s.EventCommands = DeserializeWithMutex(Of List(Of EventCommand))("staxrip2 events file", EventsFile)
         Catch ex As Exception
             Using td As New TaskDialog(Of String)
                 td.Title = "Events file failed to load!"
@@ -345,6 +284,48 @@ Public Class GlobalClass
             End Using
         End Try
     End Sub
+
+    Private Sub SerializeWithMutex(mutexName As String, path As String, value As Object)
+        RunWithMutex(mutexName,
+            Sub()
+                Dim formatter = SafeSerialization.CreateFormatter()
+                Using stream As New FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None)
+                    formatter.Serialize(stream, value)
+                End Using
+            End Sub)
+    End Sub
+
+    Private Sub RunWithMutex(mutexName As String, action As Action)
+        Using mutex As New Mutex(False, mutexName)
+            Dim mutexAcquired = False
+
+            Try
+                mutex.WaitOne()
+                mutexAcquired = True
+                action()
+            Finally
+                If mutexAcquired Then mutex.ReleaseMutex()
+            End Try
+        End Using
+    End Sub
+
+    Private Function DeserializeWithMutex(Of T)(mutexName As String, path As String) As T
+        Using mutex As New Mutex(False, mutexName)
+            Dim mutexAcquired = False
+
+            Try
+                mutex.WaitOne()
+                mutexAcquired = True
+
+                Dim formatter = SafeSerialization.CreateFormatter()
+                Using stream As New FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)
+                    Return DirectCast(formatter.Deserialize(stream), T)
+                End Using
+            Finally
+                If mutexAcquired Then mutex.ReleaseMutex()
+            End Try
+        End Using
+    End Function
 
     Sub WriteDebugLog(value As String)
         If s?.WriteDebugLog Then

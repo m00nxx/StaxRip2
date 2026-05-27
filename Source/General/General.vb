@@ -292,6 +292,10 @@ Public Class Folder
 End Class
 
 Public Class SafeSerialization
+    Shared Function CreateFormatter() As BinaryFormatter
+        Return New BinaryFormatter With {.Binder = New SafeSerializationBinder()}
+    End Function
+
     Shared Sub Serialize(o As Object, path As String)
         Dim list As New List(Of Object)
 
@@ -314,7 +318,7 @@ Public Class SafeSerialization
             End If
         Next
 
-        Dim bf As New BinaryFormatter
+        Dim bf = CreateFormatter()
 
         Try
             path = path.TrimQuotes().LongPathPrefix()
@@ -332,7 +336,7 @@ Public Class SafeSerialization
 
         If settingsFileExists Then
             Dim list As List(Of Object)
-            Dim bf As New BinaryFormatter
+            Dim bf = CreateFormatter()
 
             Using fs As New FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)
                 list = DirectCast(bf.Deserialize(fs), List(Of Object))
@@ -386,18 +390,55 @@ Public Class SafeSerialization
     <DebuggerNonUserCode()>
     Private Shared Function GetObjectInstance(ba As Byte()) As Object
         Using ms As New MemoryStream(ba)
-            Dim bf As New BinaryFormatter
+            Dim bf = CreateFormatter()
             Return bf.Deserialize(ms)
         End Using
     End Function
 
     Private Shared Function GetObjectData(o As Object) As Byte()
         Using ms As New MemoryStream
-            Dim bf As New BinaryFormatter
+            Dim bf = CreateFormatter()
             bf.Serialize(ms, o)
             Return ms.ToArray()
         End Using
     End Function
+
+    Private Class SafeSerializationBinder
+        Inherits SerializationBinder
+
+        Private Shared ReadOnly AllowedAssemblyNames As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase) From {
+            "StaxRip",
+            "StaxRip2",
+            "mscorlib",
+            "System",
+            "System.Core",
+            "System.Data",
+            "System.Drawing",
+            "System.Management",
+            "System.Management.Automation",
+            "System.Windows.Forms",
+            "System.Xml",
+            "Microsoft.VisualBasic",
+            "Accessibility",
+            "Newtonsoft.Json",
+            "MediaInfoDotNet",
+            "ManagedCuda"
+        }
+
+        Public Overrides Function BindToType(assemblyName As String, typeName As String) As Type
+            Dim simpleAssemblyName = New AssemblyName(assemblyName).Name
+
+            If Not AllowedAssemblyNames.Contains(simpleAssemblyName) Then
+                Throw New SerializationException($"Type '{typeName}' from assembly '{simpleAssemblyName}' is not allowed in StaxRip2 serialized data.")
+            End If
+
+            If simpleAssemblyName.Equals("StaxRip", StringComparison.OrdinalIgnoreCase) Then
+                assemblyName = Assembly.GetExecutingAssembly().FullName
+            End If
+
+            Return Type.GetType($"{typeName}, {assemblyName}", True)
+        End Function
+    End Class
 
     <Serializable()>
     Public Class FieldContainer

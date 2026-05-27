@@ -107,7 +107,7 @@ Public Class JobManager
 
     Shared Function GetJobs() As List(Of Job)
         Dim counter As Integer = 0
-        Dim formatter As New BinaryFormatter
+        Dim formatter = SafeSerialization.CreateFormatter()
         Dim jobsPath As String = Path.Combine(Folder.Settings, "Jobs.dat")
 
         If File.Exists(jobsPath) Then
@@ -140,7 +140,7 @@ Public Class JobManager
 
     Shared Sub SaveJobs(jobs As List(Of Job))
         Dim counter As Integer = 0
-        Dim formatter As New BinaryFormatter
+        Dim formatter = SafeSerialization.CreateFormatter()
         Dim jobsDir As String = Folder.Settings
         Dim jobsPath As String = Path.Combine(jobsDir, "Jobs.dat")
         Dim availableNumberOfBytes As ULong = 0

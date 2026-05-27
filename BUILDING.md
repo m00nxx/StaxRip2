@@ -83,7 +83,7 @@ Required runtime folders include:
 - `Source/bin/Apps`
 - `Source/bin/Apps/Conf`
 - `Source/bin/Fonts`
-- `Source/bin/Icons`
+- `Source/bin/Fonts/Icons`
 
 Example:
 

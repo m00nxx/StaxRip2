@@ -124,6 +124,19 @@ function Wait-FileReady {
     throw "Timed out waiting for '$Path' to become ready."
 }
 
+function Join-Argument {
+    param([Parameter(Mandatory = $true)][string[]] $Arguments)
+
+    return ($Arguments | ForEach-Object {
+        if ($_ -match '[\s"]') {
+            '"' + $_.Replace('"', '`"') + '"'
+        }
+        else {
+            $_
+        }
+    }) -join " "
+}
+
 if (-not $SkipBuild) {
     $msbuild = Resolve-MSBuild $MSBuildPath
     $buildTarget = If ($BuildScope -eq "Solution") { $solution } Else { $project }
@@ -209,7 +222,7 @@ if (-not $SkipArchive) {
         $stdout = Join-Path $env:TEMP "staxrip2-release-7z-out.txt"
         $stderr = Join-Path $env:TEMP "staxrip2-release-7z-err.txt"
         Remove-Item $stdout, $stderr -ErrorAction SilentlyContinue
-        $arguments = "a -t7z -mx$CompressionLevel -m0=LZMA2 -md64m -mfb64 -mmt=on `"$packageName.7z`" `"$packageName`""
+        $arguments = Join-Argument @("a", "-t7z", "-mx$CompressionLevel", "-m0=LZMA2", "-md64m", "-mfb64", "-mmt=on", "$packageName.7z", $packageName)
         $process = Start-Process -FilePath $sevenZip -ArgumentList $arguments -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru
         if (Test-Path $stdout) { Get-Content $stdout | Write-Host }
         if (Test-Path $stderr) { Get-Content $stderr | Write-Host }
@@ -225,4 +238,9 @@ if (-not $SkipArchive) {
     }
 }
 
-Write-Host "Release package prepared: $archivePath"
+If ($SkipArchive) {
+    Write-Host "Release staging prepared: $targetDirectory"
+}
+else {
+    Write-Host "Release package prepared: $archivePath"
+}

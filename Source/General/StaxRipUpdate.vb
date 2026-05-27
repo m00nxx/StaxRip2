@@ -69,7 +69,7 @@ Public Class StaxRipUpdate
             response.EnsureSuccessStatusCode()
             Dim content = Await response.Content.ReadAsStringAsync()
 
-            Dim linkMatches = Regex.Matches(content, "(?<=""browser_download_url"":"")https://github\.com/m00nxx/StaxRip2/releases/download/(?<tag>v\d\.\d+\.\d+(?:\.\d+)?)/StaxRip2-v?(?<version>\d+\.\d+\.\d+(?:\.\d+)?)-x64(?<type>-.+?)?\.7z(?="")")
+            Dim linkMatches = Regex.Matches(content, "(?<=""browser_download_url"":"")https://github\.com/m00nxx/StaxRip2/releases/download/(?<tag>v\d+\.\d+\.\d+(?:\.\d+)?)/StaxRip2-v?(?<version>\d+\.\d+\.\d+(?:\.\d+)?)-x64(?<type>-.+?)?\.7z(?="")")
             Dim latestVersions = New List(Of (Version As Version, ReleaseType As String, ReleaseUri As String, DownloadUri As String))
 
             For Each linkMatch As Match In linkMatches

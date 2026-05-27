@@ -22,27 +22,36 @@ Public Class ToolUpdate
     End Sub
 
     Async Sub Update()
-        Dim content = Await HttpClient.GetStringAsync(Package.DownloadURL)
-        Dim matches = Regex.Matches(content, "href=(""|')[^ ]+\.(7z|zip|exe)(""|')")
-
-        For Each match As Match In matches
-            Dim url = match.Value
-
-            If Ignore(url) Then Continue For
-            If Package.Include <> "" AndAlso Not url.Contains(Package.Include) Then Continue For
-
-            url = url.Substring(6, url.Length - 7)
-
-            If Not url.StartsWith("http") Then
-                Dim match2 = Regex.Match(Package.DownloadURL, "https?://[^/]+")
-                url = match2.Value + If(url.StartsWith("/"), "", "/") + url
-            End If
-
-            DownloadFile = IO.Path.Combine(Folder.Desktop, IO.Path.GetFileName(url))
-            Download(url)
-            Exit For
-        Next
+        Await UpdateAsync()
     End Sub
+
+    Async Function UpdateAsync() As Task
+        Try
+            Dim content = Await HttpClient.GetStringAsync(Package.DownloadURL)
+            Dim matches = Regex.Matches(content, "href=(""|')[^ ]+\.(7z|zip|exe)(""|')")
+
+            For Each match As Match In matches
+                Dim url = match.Value
+
+                If Ignore(url) Then Continue For
+                If Package.Include <> "" AndAlso Not url.Contains(Package.Include) Then Continue For
+
+                url = url.Substring(6, url.Length - 7)
+
+                If Not url.StartsWith("http") Then
+                    Dim match2 = Regex.Match(Package.DownloadURL, "https?://[^/]+")
+                    url = match2.Value + If(url.StartsWith("/"), "", "/") + url
+                End If
+
+                DownloadFile = IO.Path.Combine(Folder.Desktop, IO.Path.GetFileName(url))
+                Download(url)
+                Exit For
+            Next
+        Catch ex As Exception
+            UpdatePackageDialog()
+            MsgError("Tool update failed." + BR2 + ex.Message)
+        End Try
+    End Function
 
     Sub Download(url As String)
         'TaskDialog trims URLs

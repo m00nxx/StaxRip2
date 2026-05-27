@@ -77,7 +77,7 @@ Public Class ObjectHelp
     <DebuggerHidden()>
     Shared Function GetCopy(Of T)(o As T) As T
         Using ms As New MemoryStream
-            Dim bf As New BinaryFormatter
+            Dim bf = SafeSerialization.CreateFormatter()
             bf.Serialize(ms, o)
             ms.Position = 0
             Return DirectCast(bf.Deserialize(ms), T)
