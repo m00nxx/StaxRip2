@@ -96,6 +96,8 @@ Assert-NotContains $mainForm 'Function(cat) cat.Name = "Source").First.Filters' 
 Assert-Contains $mainForm 'Dim sourceCategory = profiles?.FirstOrDefault(Function(cat) cat.Name = "Source")' "Source filter lookup must use a nullable category lookup."
 Assert-Contains $mainForm 'sourceCategory = FilterCategory.GetVapourSynthDefaults().FirstOrDefault(Function(cat) cat.Name = "Source")' "Source filter lookup must fall back to built-in VapourSynth defaults."
 Assert-NotContains $mainForm "ModifyFiltersTrace.log" "Temporary source filter trace logging must not be committed."
+Assert-Contains $mainForm "NormalizeCommandLineArguments(ParseCommandLine(commandLine)).ToArray()" "Command-line parsing must normalize unquoted template names with spaces."
+Assert-Contains $mainForm 'arg.StartsWith("-" & NameOf(LoadTemplate) & ":", StringComparison.OrdinalIgnoreCase)' "LoadTemplate command-line arguments must tolerate unquoted spaces."
 
 $globalClassSource = Read-RepoFile "Source/General/GlobalClass.vb"
 Assert-NotContains $globalClassSource "StaxRip2ExceptionTrace.log" "Temporary exception trace logging must not be committed."

@@ -4983,7 +4983,7 @@ Partial Public Class MainForm
     Sub ProcessCommandLine(commandLine As String)
         If String.IsNullOrWhiteSpace(commandLine) Then Exit Sub
 
-        Dim args = ParseCommandLine(commandLine)
+        Dim args = NormalizeCommandLineArguments(ParseCommandLine(commandLine)).ToArray()
         If args.Any() Then
             Package.LoadConfAll()
         Else
@@ -5022,6 +5022,34 @@ Partial Public Class MainForm
             OpenAnyFile(files, showTemplateSelection AndAlso Not forcedTemplateLoading)
         End If
     End Sub
+
+    Private Function NormalizeCommandLineArguments(args As IEnumerable(Of String)) As List(Of String)
+        Dim ret As New List(Of String)
+        Dim input = args.ToList()
+        Dim index = 0
+
+        While index < input.Count
+            Dim arg = input(index)
+
+            If arg.StartsWith("-" & NameOf(LoadTemplate) & ":", StringComparison.OrdinalIgnoreCase) Then
+                While index + 1 < input.Count
+                    Dim nextArg = input(index + 1)
+
+                    If nextArg.StartsWith("-") OrElse nextArg.FileExists() Then
+                        Exit While
+                    End If
+
+                    arg += " " + nextArg
+                    index += 1
+                End While
+            End If
+
+            ret.Add(arg)
+            index += 1
+        End While
+
+        Return ret
+    End Function
 
     <Command("Sets the project option 'Hide dialogs asking to demux, source filter etc.'")>
     Sub SetHideDialogsOption(hide As Boolean)
