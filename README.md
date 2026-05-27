@@ -1,4 +1,16 @@
-﻿[![GitHub Release](https://img.shields.io/github/v/release/staxrip/staxrip?style=plastic&logo=Github&logoColor=white&label=Release&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip/releases/latest)
+﻿# StaxRip2
+
+StaxRip2 is an independent fork of StaxRip, created to host my own optimizations and personal changes while I work toward a new program inspired by StaxRip's philosophy.
+
+This fork is dedicated to the memory of Frank Skare, known as stax76, the original creator of StaxRip and the author of the excellent mpv.net. His software has been part of my workflow for years while restoring and converting my old VHS videos.
+
+The news of his passing was shared by his sister in the mpv.net repository: https://github.com/mpvnet-player/mpv.net/issues/767
+
+All credit for the original project remains with the StaxRip authors. This fork preserves the original MIT license.
+
+-------------
+
+[![GitHub Release](https://img.shields.io/github/v/release/staxrip/staxrip?style=plastic&logo=Github&logoColor=white&label=Release&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip/releases/latest)
 [![GitHub License](https://img.shields.io/github/license/staxrip/staxrip?style=plastic&logo=GitHub&logoColor=white&label=License&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip/blob/master/License.txt)
 [![GitHub all releases](https://img.shields.io/github/downloads/staxrip/staxrip/total?style=plastic&logo=GitHub&logoColor=white&label=Total%20Downloads&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip/releases/latest)
 [![GitHub Repo stars](https://img.shields.io/github/stars/staxrip/staxrip?style=plastic&logo=GitHub&logoColor=white&label=Stars&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip)
