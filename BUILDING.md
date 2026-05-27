@@ -73,3 +73,24 @@ Use this mode when preparing a complete source build.
 The Git repository contains source code and project files. Published release archives are expected to include runtime assets such as bundled tools, fonts, icons, and settings templates. If you run a locally built executable directly from a clean source tree, make sure the expected runtime folders are present under the application startup directory.
 
 StaxRip2 includes startup guards for missing `Fonts` and `Apps/Conf` folders, but a complete package should still include the runtime assets needed for normal encoding workflows.
+
+## Full Release Package
+
+Use `Source/Release.ps1` from a source tree that already has the full runtime payload under `Source/bin`.
+
+Required runtime folders include:
+
+- `Source/bin/Apps`
+- `Source/bin/Apps/Conf`
+- `Source/bin/Fonts`
+- `Source/bin/Icons`
+
+Example:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Source/Release.ps1 -Platform x64
+```
+
+For `v0.1.1`, the release archive is expected to be named `StaxRip2-v0.1.1-x64.7z`.
+
+The GitHub Actions workflow intentionally publishes only an app-only artifact. Full release packaging is local until the runtime payload is made reproducible from a clean checkout.

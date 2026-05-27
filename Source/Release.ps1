@@ -1,101 +1,164 @@
-﻿$solution               = $PSScriptRoot + '\StaxRip.sln'
-$binDirectory           = $PSScriptRoot + '\bin'
-$appExe                 = $binDirectory + '\StaxRip2.exe'
-$7zDirectory            = ''
-$7zExe                  = $7zDirectory + '7z.exe'
-$msBuildDirectory       = ''
-$msBuildExe             = $msBuildDirectory + 'MSBuild.exe'
-$destinationDirectory   = Join-Path (Split-Path $PSScriptRoot -Parent) 'Artifacts'
-$targetDirectory        = Join-Path $destinationDirectory 'StaxRip2'   # is extended after solution is built
-$includeProjectFiles    = @('*.config', '*.cpp', '*.h', '*.md', '*.ps1', '*.rc', '*.resx', '*.sln', '*.vb', '*.vbproj')
-$excludeBinPatterns = @(
-    '\\CineSlice'
-    '^\\[^\\]*Settings'
-    '.*recovery\.srip$',
-    '.*\.log$',
-    '.*(?<!eac3to)\.ini$',
-    '.*help\.txt$',
-    '.*\\eac3to\\bugreport\.txt$',
-    '.*\\eac3to\\log\d*\.txt$',
-    '.*\\log\d+\.txt$',
-    '.*\\qaac\\QTfiles.*',
-    '.*\\FrameServer\.exp$',
-    '.*\\FrameServer\.ilk$',
-    '.*\\FrameServer\.lib$',
-    '.*\\FrameServer\.pdb$',
-    '.*\\ManagedCuda\.pdb$',
-    '.*\\ManagedCuda\.xml$',
-    '.*\\StaxRip\.vshost.*',
-    '.*\\System\.Management\.Automation\.xml$',
-    '.*_pycache_.*'
+param(
+    [ValidateSet("App", "Solution")]
+    [string] $BuildScope = "App",
+    [ValidateSet("x64", "x86")]
+    [string] $Platform = "x64",
+    [string] $Configuration = "Release",
+    [string] $ArtifactsDirectory = (Join-Path (Split-Path $PSScriptRoot -Parent) "Artifacts"),
+    [string] $MSBuildPath = "",
+    [string] $SevenZipPath = "",
+    [switch] $SkipBuild,
+    [switch] $SkipArchive,
+    [switch] $KeepStaging
 )
-$excludeBinPatternsRegEx = '(?i)' + (($excludeBinPatterns | foreach {$_}) -join '|') + ''
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+$ErrorActionPreference = "Stop"
 
-$projectFiles = Get-ChildItem -Path $PSScriptRoot -Recurse -File -Include $includeProjectFiles
-foreach( $file in $projectFiles ) {
-    if( $file.FullName.Contains('\Apps\') ) { continue }
-    if( $file.FullName.EndsWith('.vb') ) { continue }
-    if( $file.FullName.EndsWith('.md') ) { continue }
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$solution = Join-Path $PSScriptRoot "StaxRip.sln"
+$project = Join-Path $PSScriptRoot "StaxRip.vbproj" # Source/StaxRip.vbproj
+$binDirectory = Join-Path $PSScriptRoot "bin"
+$appExe = Join-Path $binDirectory "StaxRip2.exe"
 
-    $lines = Get-Content $file
+function Resolve-MSBuild {
+    param([string] $PathOverride)
 
-    foreach( $line in $lines ) {
-        foreach( $char in $line.ToCharArray() ) {
-            $codePoint = [int]$char
-
-            if( $codePoint -gt 127 ) {
-                throw "Non ASCII char '$char' in file '$($file.FullName)' in line: $line"
-            }
-        }
+    if ($PathOverride) {
+        if (Test-Path $PathOverride) { return $PathOverride }
+        throw "MSBuild was not found at '$PathOverride'."
     }
+
+    $command = Get-Command "MSBuild.exe" -ErrorAction SilentlyContinue
+    if ($command) { return $command.Source }
+
+    $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path $vswhere) {
+        $found = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find "MSBuild\Current\Bin\MSBuild.exe" | Select-Object -First 1
+        if ($found) { return $found }
+    }
+
+    $candidates = @(
+        "${env:ProgramFiles}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe",
+        "${env:ProgramFiles}\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe",
+        "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
+        "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
+    )
+
+    foreach ($candidate in $candidates) {
+        if ($candidate -and (Test-Path $candidate)) { return $candidate }
+    }
+
+    throw "MSBuild.exe was not found. Install Visual Studio 2022 or Build Tools 2022."
 }
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+function Resolve-SevenZip {
+    param([string] $PathOverride)
 
-& $msBuildExe "$solution" -t:Rebuild -p:Configuration=Release -p:Platform=x64
-if( $LastExitCode ) { throw $LastExitCode }
+    if ($PathOverride) {
+        if (Test-Path $PathOverride) { return $PathOverride }
+        throw "7z was not found at '$PathOverride'."
+    }
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+    $command = Get-Command "7z.exe" -ErrorAction SilentlyContinue
+    if ($command) { return $command.Source }
 
-$versionInfo = [Diagnostics.FileVersionInfo]::GetVersionInfo($appExe)
-if( $versionInfo.FileBuildPart -ne 0 ) {
-    $targetDirectory += "-v$($versionInfo.FileVersion)-x64"
+    $candidates = @(
+        "${env:ProgramFiles}\7-Zip\7z.exe",
+        "${env:ProgramFiles(x86)}\7-Zip\7z.exe"
+    )
+
+    foreach ($candidate in $candidates) {
+        if ($candidate -and (Test-Path $candidate)) { return $candidate }
+    }
+
+    throw "7z.exe was not found. Install 7-Zip or pass -SevenZipPath."
 }
-else {
-    $targetDirectory += "-v$($versionInfo.FileVersion)-x64"
+
+function Assert-RuntimeAssets {
+    if (-not (Test-Path (Join-Path $binDirectory "StaxRip2.exe"))) { throw "StaxRip2.exe is missing from Source/bin." }
+    if (-not (Test-Path (Join-Path $binDirectory 'Apps'))) { throw "Source/bin/Apps is missing." }
+    if (-not (Test-Path (Join-Path $binDirectory "Apps\Conf"))) { throw "Source/bin/Apps/Conf is missing." }
+    if (-not (Test-Path (Join-Path $binDirectory 'Fonts'))) { throw "Source/bin/Fonts is missing." }
+    if (-not (Test-Path (Join-Path $binDirectory "Fonts\Icons"))) { throw "Source/bin/Fonts/Icons is missing." }
+    if (-not (Test-Path (Join-Path $binDirectory "License.txt"))) { throw "Source/bin/License.txt is missing." }
 }
 
-Write-Host $versionInfo -ForegroundColor Green
+if (-not $SkipBuild) {
+    $msbuild = Resolve-MSBuild $MSBuildPath
+    $buildTarget = If ($BuildScope -eq "Solution") { $solution } Else { $project }
+    & $msbuild $buildTarget /t:Build /p:Configuration=$Configuration /p:Platform=$Platform /m /v:minimal
+    if ($LastExitCode) { throw "MSBuild failed with exit code $LastExitCode." }
+}
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+Assert-RuntimeAssets
 
-if( Test-Path $targetDirectory ) { Remove-Item $targetDirectory -Recurse }
+$version = [Reflection.AssemblyName]::GetAssemblyName($appExe).Version.ToString(3)
+$packageName = "StaxRip2-v$version-$Platform"
+$targetDirectory = Join-Path $ArtifactsDirectory $packageName
+$archivePath = Join-Path $ArtifactsDirectory "$packageName.7z"
 
-Get-ChildItem -Path $binDirectory -Recurse | where { $excludeBinPatterns -eq $null -or $_.FullName.Replace($binDirectory, '') -notmatch $excludeBinPatternsRegEx} | Copy-Item -Destination {
-    if( $_.PSIsContainer ) {
-        $dest = Join-Path $targetDirectory $_.Parent.FullName.Substring($binDirectory.length)
-        $dest
-    } 
+if (Test-Path $targetDirectory) { Remove-Item $targetDirectory -Recurse -Force }
+if (Test-Path $archivePath) { Remove-Item $archivePath -Force }
+New-Item -ItemType Directory -Path $targetDirectory -Force | Out-Null
+
+$excludeRelativePatterns = @(
+    "^Settings($|[\\/])",
+    ".*\.log$",
+    ".*\.pdb$",
+    ".*recovery\.srip$",
+    ".*(?<!eac3to)\.ini$",
+    ".*help\.txt$",
+    ".*\\eac3to\\bugreport\.txt$",
+    ".*\\eac3to\\log\d*\.txt$",
+    ".*\\log\d+\.txt$",
+    ".*\\qaac\\QTfiles.*",
+    ".*\\vs-temp-dl($|\\).*",
+    "(^|.*[\\/])FrameServer\.(exp|ilk|lib|pdb)$",
+    "(^|.*[\\/])ManagedCuda\.(pdb|xml)$",
+    "(^|.*[\\/])System\.Management\.Automation\.xml$",
+    ".*_pycache_.*"
+)
+
+Get-ChildItem -LiteralPath $binDirectory -Recurse -Force | ForEach-Object {
+    $relativePath = $_.FullName.Substring($binDirectory.Length).TrimStart("\", "/")
+    if (-not $relativePath) { return }
+
+    foreach ($pattern in $excludeRelativePatterns) {
+        if ($relativePath -match $pattern) { return }
+    }
+
+    $destination = Join-Path $targetDirectory $relativePath
+
+    if ($_.PSIsContainer) {
+        New-Item -ItemType Directory -Path $destination -Force | Out-Null
+    }
     else {
-        $dest = Join-Path $targetDirectory $_.FullName.Substring($binDirectory.length)
-        $destFileInfo = [System.IO.FileInfo]$dest
-        $destDirectoryName = $destFileInfo.DirectoryName
-        if( -not (Test-Path $destDirectoryName) ) { New-Item -Path $destDirectoryName -ItemType Directory > $null }
-        $dest
+        $destinationDirectory = Split-Path $destination -Parent
+        if (-not (Test-Path $destinationDirectory)) {
+            New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null
+        }
+        Copy-Item -LiteralPath $_.FullName -Destination $destination -Force
     }
-} -Force
+}
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+Copy-Item (Join-Path $repoRoot "README.md") (Join-Path $targetDirectory "README.md") -Force
+Copy-Item (Join-Path $repoRoot "CHANGELOG.md") (Join-Path $targetDirectory "CHANGELOG.md") -Force
+Copy-Item (Join-Path $repoRoot "License.txt") (Join-Path $targetDirectory "License.txt") -Force
 
-$targetFile = "$targetDirectory.7z"
+if (-not $SkipArchive) {
+    $sevenZip = Resolve-SevenZip $SevenZipPath
+    Push-Location $ArtifactsDirectory
+    try {
+        & $sevenZip a -t7z -mx9 -m0=LZMA2 -md1024m -mfb256 -mmt=on "$packageName.7z" $packageName
+        if ($LastExitCode) { throw "7-Zip failed with exit code $LastExitCode." }
+    }
+    finally {
+        Pop-Location
+    }
 
-if( Test-Path $targetFile ) { Remove-Item $targetFile -Recurse }
+    if (-not $KeepStaging) {
+        Remove-Item $targetDirectory -Recurse -Force
+    }
+}
 
-& $7zExe a -t7z -mx9 -m0=LZMA2 -md1024m -mfb256 -mmt3 -sse "$targetFile" -r "$targetDirectory"
-if( $LastExitCode ) { throw $LastExitCode }
-
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-Write-Host 'Successfully finished' -ForegroundColor Green
+Write-Host "Release package prepared: $archivePath"

@@ -170,6 +170,10 @@ Assert-Contains $buildDocs "Source/StaxRip.vbproj" "Build docs must explain app-
 Assert-Contains $buildDocs "GitHub Actions" "Build docs must describe the GitHub Actions build."
 Assert-Contains $buildDocs "StaxRip2-Release-x64" "Build docs must document the CI artifact name."
 Assert-Contains $buildDocs "app-only artifact" "Build docs must clarify the CI artifact scope."
+Assert-Contains $buildDocs "Source/Release.ps1" "Build docs must document full release packaging."
+Assert-Contains $buildDocs "StaxRip2-v0.1.1-x64.7z" "Build docs must document the v0.1.1 release archive name."
+Assert-Contains $buildDocs "Source/bin/Apps" "Build docs must document required packaged runtime apps."
+Assert-Contains $buildDocs "Source/bin/Fonts" "Build docs must document required packaged fonts."
 
 $workflow = Read-RepoFile ".github/workflows/build.yml"
 Assert-Contains $workflow "windows-latest" "GitHub Actions build must run on Windows."
@@ -188,5 +192,19 @@ foreach ($buildScriptPath in @("Source/Build.ps1", "Source/BuildAndPack.ps1", "S
     Assert-NotContains $buildScript "StaxRip.exe" "$buildScriptPath must not package the upstream executable."
     Assert-NotContains $buildScript "A:\StaxRip-Releases" "$buildScriptPath must not require the maintainer-specific release drive."
 }
+
+$releaseScript = Read-RepoFile "Source/Release.ps1"
+Assert-Contains $releaseScript "param(" "Release packaging must be configurable from the command line."
+Assert-Contains $releaseScript "Source/StaxRip.vbproj" "Release packaging must support app-only builds for source checkouts."
+Assert-Contains $releaseScript 'StaxRip2-v$version-$Platform' "Release archive naming must match update-check expectations."
+Assert-Contains $releaseScript "README.md" "Release packages must include README.md."
+Assert-Contains $releaseScript "CHANGELOG.md" "Release packages must include CHANGELOG.md."
+Assert-Contains $releaseScript '"^Settings($|[\\/])"' "Release packages must exclude user settings."
+Assert-Contains $releaseScript "Test-Path (Join-Path `$binDirectory 'Apps')" "Release packaging must validate bundled runtime apps."
+Assert-Contains $releaseScript "Test-Path (Join-Path `$binDirectory 'Fonts')" "Release packaging must validate bundled fonts."
+Assert-Contains $releaseScript "vs-temp-dl" "Release packages must exclude temporary VapourSynth download caches."
+Assert-Contains $releaseScript '(^|.*[\\/])ManagedCuda\.(pdb|xml)$' "Release packages must exclude top-level ManagedCuda debug metadata."
+Assert-Contains $releaseScript '(^|.*[\\/])System\.Management\.Automation\.xml$' "Release packages must exclude top-level PowerShell XML metadata."
+Assert-Contains $releaseScript "7z" "Release packaging must create a 7z archive."
 
 Write-Host "Source checks passed."
