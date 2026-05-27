@@ -218,7 +218,7 @@ Public Class Folder
                 fresh = True
             End If
 
-            Dim version = 44
+            Dim version = 45
 
             If fresh OrElse Not s.Storage.GetInt("template update") = version Then
                 s.Storage.SetInt("template update", version)
@@ -237,7 +237,7 @@ Public Class Folder
                 Dim auto As New Project
                 auto.Init()
                 auto.Script = VideoScript.GetDefaults()(1)
-                auto.Script.Filters(0) = VideoFilter.GetDefault("Source", "Automatic", ScriptEngine.VapourSynth)
+                auto.Script.Filters(0) = If(VideoFilter.GetDefault("Source", "Automatic", ScriptEngine.VapourSynth), auto.Script.Filters(0))
                 auto.DemuxAudio = DemuxMode.Preferred
                 auto.SubtitleMode = SubtitleMode.Preferred
                 SafeSerialization.Serialize(auto, Path.Combine(ret, "Automatic Workflow.srip"))
@@ -245,7 +245,7 @@ Public Class Folder
                 Dim manual As New Project
                 manual.Init()
                 manual.Script = VideoScript.GetDefaults()(1)
-                manual.Script.Filters(0) = VideoFilter.GetDefault("Source", "Manual")
+                manual.Script.Filters(0) = If(VideoFilter.GetDefault("Source", "Manual"), manual.Script.Filters(0))
                 manual.DemuxAudio = DemuxMode.Dialog
                 manual.SubtitleMode = SubtitleMode.Dialog
                 SafeSerialization.Serialize(manual, Path.Combine(ret, "Manual Workflow.srip"))
@@ -363,7 +363,7 @@ Public Class SafeSerialization
 
         safeInstance.Init()
 
-        If settingsFileExists AndAlso safeInstance.WasUpdated Then
+        If settingsFileExists AndAlso safeInstance.WasUpdated AndAlso TypeOf DirectCast(instance, Object) Is ApplicationSettings Then
             safeInstance.WasUpdated = False
             Serialize(instance, path)
         End If

@@ -52,8 +52,15 @@ Assert-Contains $applicationSettings "ap?.Migrate()" "Settings migration must sk
 $general = Read-RepoFile "Source/General/General.vb"
 Assert-Contains $general 'Software\StaxRip2\SettingsLocation' "Settings directory selection must use the StaxRip2 registry key."
 Assert-NotContains $general 'Software\StaxRip\SettingsLocation' "Settings directory selection must not reuse the original StaxRip registry key."
+Assert-Contains $general "Dim version = 45" "Template update version must advance when default templates change."
+Assert-Contains $general 'auto.Script.Filters(0) = If(VideoFilter.GetDefault("Source", "Automatic", ScriptEngine.VapourSynth), auto.Script.Filters(0))' "Automatic workflow templates must not serialize a null source filter."
+Assert-Contains $general 'manual.Script.Filters(0) = If(VideoFilter.GetDefault("Source", "Manual"), manual.Script.Filters(0))' "Manual workflow templates must not serialize a null source filter."
 Assert-Contains $general "Dim settingsFileExists = File.Exists(path)" "Fresh settings initialization must track whether a settings file existed."
-Assert-Contains $general "If settingsFileExists AndAlso safeInstance.WasUpdated Then" "Fresh settings initialization must not immediately serialize default settings."
+Assert-Contains $general "If settingsFileExists AndAlso safeInstance.WasUpdated AndAlso TypeOf DirectCast(instance, Object) Is ApplicationSettings Then" "Project/template deserialization must not immediately reserialize migrated projects."
+Assert-NotContains $general "DeserializeTrace.log" "Temporary deserialization trace logging must not be committed."
+
+$filtersListView = Read-RepoFile "Source/Controls/FiltersListView.vb"
+Assert-NotContains $filtersListView "FiltersLoadTrace.log" "Temporary filter loading trace logging must not be committed."
 
 $solution = Read-RepoFile "Source/StaxRip.sln"
 Assert-Contains $solution "Release|x64.ActiveCfg = Release|x64" "Release x64 must build the Release configuration."
