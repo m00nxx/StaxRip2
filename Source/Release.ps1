@@ -9,6 +9,8 @@ param(
     [string] $SevenZipPath = "",
     [ValidateRange(0, 9)]
     [int] $CompressionLevel = 5,
+    [ValidateRange(1, 3600)]
+    [int] $ArchiveReadyTimeoutSeconds = 300,
     [switch] $SkipBuild,
     [switch] $SkipArchive,
     [switch] $KeepStaging
@@ -35,7 +37,7 @@ function Resolve-MSBuild {
 
     $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
     if (Test-Path $vswhere) {
-        $found = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find "MSBuild\Current\Bin\MSBuild.exe" | Select-Object -First 1
+        $found = (& $vswhere -latest -products "*" -requires Microsoft.Component.MSBuild -find "MSBuild\Current\Bin\MSBuild.exe") | Select-Object -First 1
         if ($found) { return $found }
     }
 
@@ -87,12 +89,15 @@ function Assert-RuntimeAssets {
 }
 
 function Wait-FileReady {
-    param([Parameter(Mandatory = $true)][string] $Path)
+    param(
+        [Parameter(Mandatory = $true)][string] $Path,
+        [ValidateRange(1, 3600)][int] $TimeoutSeconds = 300
+    )
 
     $lastLength = -1
     $stableCount = 0
 
-    for ($attempt = 0; $attempt -lt 120; $attempt++) {
+    for ($attempt = 0; $attempt -lt $TimeoutSeconds; $attempt++) {
         if (Test-Path $Path) {
             try {
                 $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None)
@@ -155,26 +160,42 @@ $excludeRelativePatterns = @(
     ".*_pycache_.*"
 )
 
-Get-ChildItem -LiteralPath $binDirectory -Recurse -Force | ForEach-Object {
-    $relativePath = $_.FullName.Substring($binDirectory.Length).TrimStart("\", "/")
-    if (-not $relativePath) { return }
-
+function Test-IsExcludedRelativePath {
+    param([Parameter(Mandatory = $true)][string] $RelativePath)
     foreach ($pattern in $excludeRelativePatterns) {
-        if ($relativePath -match $pattern) { return }
+        if ($RelativePath -match $pattern) { return $true }
     }
 
-    $destination = Join-Path $targetDirectory $relativePath
+    return $false
+}
 
-    if ($_.PSIsContainer) {
+function Copy-PackageItem {
+    param(
+        [Parameter(Mandatory = $true)][IO.FileSystemInfo] $Item,
+        [Parameter(Mandatory = $true)][string] $RelativePath
+    )
+
+    if (Test-IsExcludedRelativePath $RelativePath) { return }
+
+    $destination = Join-Path $targetDirectory $RelativePath
+
+    if ($Item.PSIsContainer) {
         New-Item -ItemType Directory -Path $destination -Force | Out-Null
+        Get-ChildItem -LiteralPath $Item.FullName -Force | ForEach-Object {
+            Copy-PackageItem $_ (Join-Path $RelativePath $_.Name)
+        }
     }
     else {
         $destinationDirectory = Split-Path $destination -Parent
         if (-not (Test-Path $destinationDirectory)) {
             New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null
         }
-        Copy-Item -LiteralPath $_.FullName -Destination $destination -Force
+        Copy-Item -LiteralPath $Item.FullName -Destination $destination -Force
     }
+}
+
+Get-ChildItem -LiteralPath $binDirectory -Force | ForEach-Object {
+    Copy-PackageItem $_ $_.Name
 }
 
 Copy-Item (Join-Path $repoRoot "README.md") (Join-Path $targetDirectory "README.md") -Force
@@ -193,7 +214,7 @@ if (-not $SkipArchive) {
         if (Test-Path $stdout) { Get-Content $stdout | Write-Host }
         if (Test-Path $stderr) { Get-Content $stderr | Write-Host }
         if ($process.ExitCode) { throw "7-Zip failed with exit code $($process.ExitCode)." }
-        Wait-FileReady (Join-Path $ArtifactsDirectory "$packageName.7z")
+        Wait-FileReady (Join-Path $ArtifactsDirectory "$packageName.7z") $ArchiveReadyTimeoutSeconds
     }
     finally {
         Pop-Location

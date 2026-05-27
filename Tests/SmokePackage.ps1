@@ -6,6 +6,8 @@ param(
     [string] $SevenZipPath = "",
     [ValidateRange(0, 9)]
     [int] $CompressionLevel = 5,
+    [ValidateRange(1, 3600)]
+    [int] $ArchiveReadyTimeoutSeconds = 300,
     [switch] $SkipBuild,
     [switch] $SkipArchive,
     [switch] $KeepStaging
@@ -51,46 +53,39 @@ function Assert-PathMissing {
 function Get-ArchiveListing {
     param(
         [Parameter(Mandatory = $true)][string] $Archive,
-        [string] $SevenZipPath = ""
+        [string] $SevenZipPath = "",
+        [ValidateRange(1, 3600)][int] $TimeoutSeconds = 300
     )
 
     Assert-PathExists $Archive "Archive was not created."
+    $sevenZip = Resolve-SevenZip $SevenZipPath
 
-    if ($SevenZipPath) {
-        if (-not (Test-Path $SevenZipPath)) {
-            throw "7z was not found at '$SevenZipPath'."
-        }
-        for ($attempt = 0; $attempt -lt 120; $attempt++) {
-            $stdout = Join-Path $env:TEMP "staxrip2-smoke-7z-list-out.txt"
-            $stderr = Join-Path $env:TEMP "staxrip2-smoke-7z-list-err.txt"
-            Remove-Item $stdout, $stderr -ErrorAction SilentlyContinue
-            $process = Start-Process -FilePath $SevenZipPath -ArgumentList "l -ba `"$Archive`"" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru
-            if ($process.ExitCode -eq 0) { return Get-Content $stdout }
-            Start-Sleep -Seconds 1
-        }
-        throw "7z listing failed after waiting for the archive."
-    }
-
-    $sevenZip = Get-Command "7z.exe" -ErrorAction SilentlyContinue
-    if (-not $sevenZip) {
-        $sevenZip = Get-Command "7za.exe" -ErrorAction SilentlyContinue
-    }
-    if (-not $sevenZip) {
-        $sevenZip = Get-Command "7z" -ErrorAction SilentlyContinue
-    }
-
-    if (-not $sevenZip) { throw "7z was not found in PATH." }
-
-    for ($attempt = 0; $attempt -lt 120; $attempt++) {
+    for ($attempt = 0; $attempt -lt $TimeoutSeconds; $attempt++) {
         $stdout = Join-Path $env:TEMP "staxrip2-smoke-7z-list-out.txt"
         $stderr = Join-Path $env:TEMP "staxrip2-smoke-7z-list-err.txt"
         Remove-Item $stdout, $stderr -ErrorAction SilentlyContinue
-        $process = Start-Process -FilePath $sevenZip.Source -ArgumentList "l -ba `"$Archive`"" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru
+        $process = Start-Process -FilePath $sevenZip -ArgumentList "l -ba `"$Archive`"" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru
         if ($process.ExitCode -eq 0) { return Get-Content $stdout }
         Start-Sleep -Seconds 1
     }
 
     throw "7z listing failed after waiting for the archive."
+}
+
+function Resolve-SevenZip {
+    param([string] $PathOverride = "")
+
+    if ($PathOverride) {
+        if (Test-Path $PathOverride) { return $PathOverride }
+        throw "7z was not found at '$PathOverride'."
+    }
+
+    foreach ($commandName in @("7z.exe", "7za.exe", "7z")) {
+        $command = Get-Command $commandName -ErrorAction SilentlyContinue
+        if ($command) { return $command.Source }
+    }
+
+    throw "7z was not found in PATH."
 }
 
 function Assert-ArchiveContains {
@@ -125,7 +120,8 @@ $releaseArgs = @(
     "-File", $releaseScript,
     "-Platform", $Platform,
     "-ArtifactsDirectory", $ArtifactsDirectory,
-    "-CompressionLevel", $CompressionLevel
+    "-CompressionLevel", $CompressionLevel,
+    "-ArchiveReadyTimeoutSeconds", $ArchiveReadyTimeoutSeconds
 )
 
 if ($MSBuildPath) {
@@ -169,7 +165,7 @@ if ($SkipArchive) {
 }
 else {
     Assert-PathExists $archivePath "Release archive was not created."
-    $listing = Get-ArchiveListing $archivePath $SevenZipPath
+    $listing = Get-ArchiveListing $archivePath $SevenZipPath $ArchiveReadyTimeoutSeconds
 
     Assert-ArchiveContains $listing "StaxRip2\.exe$" "StaxRip2.exe is missing from the archive."
     Assert-ArchiveContains $listing "StaxRip2\.exe\.config$" "StaxRip2.exe.config is missing from the archive."

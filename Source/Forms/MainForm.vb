@@ -3061,6 +3061,7 @@ Partial Public Class MainForm
         End If
 
         Dim sourceFilters = If(sourceCategory.Filters, New List(Of VideoFilter))
+        Dim sourceFormat As String = Nothing
 
         If Not sourceFilter.Script.Contains("(") Then
             For Each pref In preferences
@@ -3080,13 +3081,23 @@ Partial Public Class MainForm
                     If skipNonAnyExtension AndAlso extension <> "*" Then Continue For
                     If skipNonAnyFormat AndAlso format <> "*" Then Continue For
 
-                    If (extension = p.SourceFile.Ext OrElse extension = "*") AndAlso
-                        (format = "*" OrElse format = MediaInfo.GetVideo(p.SourceFile, "Format").ToLowerInvariant) Then
+                    If extension = p.SourceFile.Ext OrElse extension = "*" Then
+                        Dim formatMatches = format = "*"
 
-                        Dim filters = sourceFilters.Where(Function(cat) cat.Name = pref.Value)
+                        If Not formatMatches Then
+                            If sourceFormat Is Nothing Then
+                                sourceFormat = MediaInfo.GetVideo(p.SourceFile, "Format").ToLowerInvariant
+                            End If
 
-                        If filters.Count > 0 Then
-                            p.Script.SetFilter("Source", filters(0).Name, filters(0).Script)
+                            formatMatches = format = sourceFormat
+                        End If
+
+                        If Not formatMatches Then Continue For
+
+                        Dim matchedFilter = sourceFilters.FirstOrDefault(Function(cat) cat.Name = pref.Value)
+
+                        If matchedFilter IsNot Nothing Then
+                            p.Script.SetFilter("Source", matchedFilter.Name, matchedFilter.Script)
                             Exit Sub
                         End If
                     End If

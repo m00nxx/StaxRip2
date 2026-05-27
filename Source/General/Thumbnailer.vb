@@ -140,7 +140,7 @@ Public Class Thumbnailer
 
         Dim imageEPs = New EncoderParameters(1)
         imageEPs.Param(0) = New EncoderParameter(Imaging.Encoder.Quality, imageQuality)
-        Dim imageCI = ImageCodecInfo.GetImageEncoders.Where(Function(arg) arg.FormatID = imageFormatGuid).FirstOrDefault
+        Dim imageCI = ImageCodecInfo.GetImageEncoders.FirstOrDefault(Function(arg) arg.FormatID = imageFormatGuid)
         If imageCI Is Nothing Then
             Throw New Exception("Image encoder was not found.")
         End If

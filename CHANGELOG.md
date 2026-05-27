@@ -1,6 +1,14 @@
 ﻿StaxRip2 Changelog
 ==================
 
+Unreleased
+----------
+
+- Optimized release packaging by pruning excluded runtime directories before recursive copy.
+- Made release archive readiness timeouts configurable for large local packages and smoke checks.
+- Cached source video format lookup while matching source filter preferences and reduced redundant filter enumeration.
+- Simplified package smoke archive listing through a single 7-Zip resolver.
+
 v0.1.1 (2026-05-27)
 -------------------
 
