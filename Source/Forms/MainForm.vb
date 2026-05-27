@@ -1000,7 +1000,7 @@ Partial Public Class MainForm
         PowerShell.InitCode =
             "Using namespace StaxRip;" + BR +
             "Using namespace StaxRip.UI;" + BR +
-            "[Reflection.Assembly]::LoadWithPartialName(""StaxRip"")"
+            "[Reflection.Assembly]::LoadWithPartialName(""StaxRip2"")"
 
         If s.WriteDebugLog Then
             Dim filePath = Path.Combine(Folder.Startup, "Debug.log")

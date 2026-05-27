@@ -325,7 +325,7 @@ Namespace UI
             ElseIf TypeOf form Is JobsForm Then
                 Return "Jobs"
             ElseIf TypeOf form Is MainForm Then
-                Return "StaxRip"
+                Return "StaxRip2"
             ElseIf TypeOf form Is PreviewForm Then
                 Return "Preview"
             ElseIf TypeOf form Is ProcessingForm Then

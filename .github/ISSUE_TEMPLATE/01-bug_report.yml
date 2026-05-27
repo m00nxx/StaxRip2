@@ -52,4 +52,4 @@ body:
       label: Additional information
       description: |
         Add any other context about the problem here.
-        If applicable, add screenshots to help explain your problem and/or provide a log file. The log file is located in the temp folder and the temp folder is located in the same directory as the source file. The log file ends with _staxrip.log.
+        If applicable, add screenshots to help explain your problem and/or provide a log file. The log file is located in the temp folder and the temp folder is located in the same directory as the source file. The log file ends with _staxrip2.log.

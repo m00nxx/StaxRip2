@@ -110,7 +110,7 @@ Public Class Package
         .AllowCustomPath = False,
         .WebURL = "https://ffmpeg.org",
         .HelpURL = "https://www.ffmpeg.org/documentation.html",
-        .DownloadURL = "https://github.com/staxrip/staxrip/wiki/ffmpeg",
+        .DownloadURL = "https://github.com/m00nxx/StaxRip2/wiki/ffmpeg",
         .HelpSwitch = "-h",
         .Description = "Versatile and free audio video convertor console app."})
 
@@ -123,7 +123,7 @@ Public Class Package
         .AllowCustomPath = False,
         .WebURL = "https://ffmpeg.org",
         .HelpURL = "https://www.ffmpeg.org/documentation.html",
-        .DownloadURL = "https://github.com/staxrip/staxrip/wiki/ffmpeg",
+        .DownloadURL = "https://github.com/m00nxx/StaxRip2/wiki/ffmpeg",
         .HelpSwitch = "-h",
         .Description = "Versatile and free audio video convertor console app."})
 
@@ -218,7 +218,7 @@ Public Class Package
         .SupportsAutoUpdate = False,
         .VersionAllowAny = True,
         .IsIncluded = False,
-        .DownloadURL = "https://github.com/staxrip/staxrip/wiki/qaac",
+        .DownloadURL = "https://github.com/m00nxx/StaxRip2/wiki/qaac",
         .Locations = {IO.Path.Combine("Audio", "qaac"), IO.Path.Combine("Audio", "qaac", "QTfiles64"), IO.Path.Combine(Folder.Settings, "Tools", "Apple Application Support")},
         .RequiredFunc = Function() Audio.IsEncoderUsed(GuiAudioEncoder.qaac),
         .Description = "qaac requires this library, it's not included because of a non-free license."})
@@ -693,7 +693,7 @@ Public Class Package
         .Location = IO.Path.Combine("Encoders", "AOMEnc"),
         .Description = "AV1 video encoder console app.",
         .WebURL = "https://aomedia.org",
-        .DownloadURL = "https://github.com/staxrip/staxrip/wiki/aomenc",
+        .DownloadURL = "https://github.com/m00nxx/StaxRip2/wiki/aomenc",
         .RequiredFunc = Function() TypeOf p.VideoEncoder Is AOMEnc,
         .HelpSwitch = "--help"})
 

@@ -133,7 +133,7 @@ Interactive macros can be used in certain menus like the filter profiles menu. T
 ### Encoder Macros
 When choosing the option to override the target file name via the encoder options, you have the possibility to extend the normal macros with encoder specific ones.  
 The syntax is: `%parameter%`  
-> :information_source: There are some special parameters, that might be not supported (yet). In such cases you can open a [feature request](https://github.com/staxrip/staxrip/issues/new?template=request-a-feature.md).
+> :information_source: There are some special parameters, that might be not supported (yet). In such cases you can open a [feature request](https://github.com/m00nxx/StaxRip2/issues/new?template=request-a-feature.md).
 
 Examples:
 

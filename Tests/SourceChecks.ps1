@@ -104,6 +104,7 @@ Assert-Contains $updateChecker "Would you like StaxRip2 to check for updates per
 $mainForm = Read-RepoFile "Source/Forms/MainForm.vb"
 Assert-Contains $mainForm 'https://github.com/m00nxx/StaxRip2' "Help menu must point to the StaxRip2 repository."
 Assert-Contains $mainForm 'https://github.com/m00nxx/StaxRip2/issues/new/choose' "Issue reporting must point to the StaxRip2 repository."
+Assert-Contains $mainForm '[Reflection.Assembly]::LoadWithPartialName(""StaxRip2"")' "PowerShell integration must load the fork assembly name."
 Assert-Contains $mainForm 'Startup template failed to load' "Startup template load failures must not recurse indefinitely."
 Assert-Contains $mainForm 'Startup template failed to initialize' "Startup template initialization failures must not recurse indefinitely."
 Assert-Contains $mainForm 'Return OpenProject(startupTemplatePath, False)' "Startup template fallback must bypass save-current recursion."
@@ -139,6 +140,25 @@ Assert-NotContains $logBuilder '"staxrip.log"' "Diagnostic logs must not use ups
 $imageUtils = Read-RepoFile "Source/UI/ImageUtils.vb"
 Assert-NotContains $imageUtils 'MsgWarn("Correct font was not found, using default instead!")' "Missing icon fonts must not show a startup warning dialog."
 
+$toolUpdate = Read-RepoFile "Source/General/ToolUpdate.vb"
+Assert-Contains $toolUpdate "Application.ProductName" "Tool update dialogs must identify the current product."
+Assert-NotContains $toolUpdate '"StaxRip", MessageBoxButtons.OKCancel' "Tool update dialogs must not hardcode upstream branding."
+
+$documentation = Read-RepoFile "Source/General/Documentation.vb"
+Assert-Contains $documentation "https://github.com/m00nxx/StaxRip2/issues/new?template=request-a-feature.md" "Generated documentation must link feature requests to the fork."
+Assert-Contains $documentation "This page is based on the StaxRip2 version" "Generated documentation must identify the fork."
+Assert-NotContains $documentation "https://github.com/staxrip/staxrip" "Generated runtime documentation must not link back to upstream issue pages."
+
+$packageSource = Read-RepoFile "Source/General/Package.vb"
+Assert-Contains $packageSource "https://github.com/m00nxx/StaxRip2/wiki/ffmpeg" "Package help links must target the fork wiki for ffmpeg."
+Assert-Contains $packageSource "https://github.com/m00nxx/StaxRip2/wiki/qaac" "Package help links must target the fork wiki for qaac."
+Assert-Contains $packageSource "https://github.com/m00nxx/StaxRip2/wiki/aomenc" "Package help links must target the fork wiki for aomenc."
+Assert-NotContains $packageSource "https://github.com/staxrip/staxrip/wiki" "Package help links must not point to upstream StaxRip wiki pages."
+
+$qsvEncSource = Read-RepoFile "Source/Encoding/QSVEnc.vb"
+Assert-Contains $qsvEncSource "https://github.com/m00nxx/StaxRip2/wiki/qsvenc-bitrate-modes" "QSVEnc help links must target the fork wiki."
+Assert-NotContains $qsvEncSource "https://github.com/staxrip/staxrip/wiki" "QSVEnc help links must not point to upstream StaxRip wiki pages."
+
 $previewForm = Read-RepoFile "Source/Forms/PreviewForm.vb"
 Assert-Contains $previewForm "ImageCodecInfo.GetImageEncoders.FirstOrDefault" "Preview image saving must tolerate a missing JPEG encoder."
 Assert-Contains $previewForm "If info Is Nothing Then" "Preview image saving must check JPEG encoder lookup results."
@@ -160,6 +180,28 @@ $issueTemplateConfig = Read-RepoFile ".github/ISSUE_TEMPLATE/config.yml"
 Assert-Contains $issueTemplateConfig "https://github.com/m00nxx/StaxRip2/discussions/new/choose" "Issue template discussion links must target the fork."
 Assert-Contains $issueTemplateConfig "https://github.com/m00nxx/StaxRip2/blob/master/Docs/README.md" "Issue template documentation links must target the fork."
 Assert-NotContains $issueTemplateConfig "https://github.com/staxrip/staxrip" "Issue template config must not point users back to upstream StaxRip."
+
+$bugTemplate = Read-RepoFile ".github/ISSUE_TEMPLATE/01-bug_report.yml"
+Assert-Contains $bugTemplate "_staxrip2.log" "Bug report template must reference StaxRip2 log filenames."
+Assert-NotContains $bugTemplate "_staxrip.log" "Bug report template must not reference upstream log filenames."
+
+$installationDocs = Read-RepoFile "Docs/Introduction/Installation.md"
+Assert-Contains $installationDocs "StaxRip2 is a portable application" "Installation docs must identify the fork."
+Assert-Contains $installationDocs '`StaxRip2.exe`' "Installation docs must use the fork executable name."
+Assert-NotContains $installationDocs '`StaxRip.exe`' "Installation docs must not tell users to launch upstream executable names."
+
+$macroDocs = Read-RepoFile "Docs/Usage/Macros.md"
+Assert-Contains $macroDocs "https://github.com/m00nxx/StaxRip2/issues/new?template=request-a-feature.md" "Macro docs must link feature requests to the fork."
+Assert-NotContains $macroDocs "https://github.com/staxrip/staxrip" "Macro docs must not link feature requests to upstream StaxRip."
+
+$uiMisc = Read-RepoFile "Source/UI/Misc.vb"
+Assert-Contains $uiMisc 'Return "StaxRip2"' "Window position keys must identify the fork main window."
+
+$applicationSettingsSource = Read-RepoFile "Source/General/ApplicationSettings.vb"
+Assert-Contains $applicationSettingsSource '"StaxRip2", "Crop", "Jobs"' "Default remembered window positions must identify the fork main window."
+
+$frameServerResource = Read-RepoFile "Source/FrameServer/FrameServer.rc"
+Assert-Contains $frameServerResource 'VALUE "ProductName", "StaxRip2"' "FrameServer metadata must identify the fork."
 
 $buildDocs = Read-RepoFile "BUILDING.md"
 Assert-Contains $buildDocs "Microsoft.VisualStudio.Workload.VCTools" "Build docs must list the Build Tools C++ workload."

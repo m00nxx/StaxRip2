@@ -124,7 +124,7 @@ Public Class QSVEnc
 
         Using form As New CommandLineForm(params1)
             form.HTMLHelpFunc = Function() $"<p><a href=""{Package.QSVEncC.HelpURL}"">QSVEnc Online Help</a></p>" +
-                $"<p><a href=""https://github.com/staxrip/staxrip/wiki/qsvenc-bitrate-modes"">QSVEnc bitrate modes</a></p>" +
+                $"<p><a href=""https://github.com/m00nxx/StaxRip2/wiki/qsvenc-bitrate-modes"">QSVEnc bitrate modes</a></p>" +
                 $"<pre>{HelpDocument.ConvertChars(Package.QSVEncC.CreateHelpfile())}</pre>"
 
             Dim a = Sub()

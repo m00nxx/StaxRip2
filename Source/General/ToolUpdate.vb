@@ -47,7 +47,7 @@ Public Class ToolUpdate
     Sub Download(url As String)
         'TaskDialog trims URLs
         If MessageBox.Show("Download the file shown below?" + BR2 + url,
-            "StaxRip", MessageBoxButtons.OKCancel,
+            Application.ProductName, MessageBoxButtons.OKCancel,
             MessageBoxIcon.Question) = DialogResult.OK Then
 
             Using form As New DownloadForm(url, DownloadFile)

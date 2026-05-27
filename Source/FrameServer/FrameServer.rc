@@ -47,7 +47,7 @@ BEGIN
             VALUE "InternalName", "FrameSer.dll"
             VALUE "LegalCopyright", "Copyright (C) 2020 StaxRip authors"
             VALUE "OriginalFilename", "FrameSer.dll"
-            VALUE "ProductName", "StaxRip"
+            VALUE "ProductName", "StaxRip2"
             VALUE "ProductVersion", "0.0.0.0"
         END
     END
@@ -107,4 +107,3 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-

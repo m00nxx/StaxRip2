@@ -163,7 +163,7 @@ Public Class Documentation
         sb.AppendLine("### Encoder Macros")
         sb.AppendLine("When choosing the option to override the target file name via the encoder options, you have the possibility to extend the normal macros with encoder specific ones.  ")
         sb.AppendLine("The syntax is: `%parameter%`  ")
-        sb.AppendLine("> :information_source: There are some special parameters, that might be not supported (yet). In such cases you can open a [feature request](https://github.com/staxrip/staxrip/issues/new?template=request-a-feature.md).")
+        sb.AppendLine("> :information_source: There are some special parameters, that might be not supported (yet). In such cases you can open a [feature request](https://github.com/m00nxx/StaxRip2/issues/new?template=request-a-feature.md).")
         sb.AppendLine()
         sb.AppendLine("Examples:")
         sb.AppendLine()
@@ -277,7 +277,7 @@ Public Class Documentation
     Shared Function GetTools() As String
         Dim sb As New StringBuilder()
 
-        sb.Append("This page is based on the StaxRip version " + Application.ProductVersion + BR2)
+        sb.Append("This page is based on the StaxRip2 version " + Application.ProductVersion + BR2)
         sb.Append("[Console App](Tools#console-app)" + BR2)
         sb.Append("[GUI App](Tools#gui-app)" + BR2)
         sb.Append("[AviSynth Plugin](Tools#avisynth-plugin)" + BR2)
