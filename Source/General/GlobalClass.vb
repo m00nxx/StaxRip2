@@ -102,7 +102,7 @@ Public Class GlobalClass
 
     Sub SaveSettings()
         Try
-            Using mutex As New Mutex(False, "staxrip settings file")
+            Using mutex As New Mutex(False, "staxrip2 settings file")
                 mutex.WaitOne()
                 SafeSerialization.Serialize(s, SettingsFile)
                 mutex.ReleaseMutex()
@@ -187,7 +187,7 @@ Public Class GlobalClass
         Try
             Dim formatter As New BinaryFormatter
 
-            Using mutex As New Mutex(False, "staxrip audio profiles file")
+            Using mutex As New Mutex(False, "staxrip2 audio profiles file")
                 mutex.WaitOne()
                 Using stream As New FileStream(AudioProfilesFile, FileMode.Create, FileAccess.Write, FileShare.None)
                     formatter.Serialize(stream, s.AudioProfiles)
@@ -207,7 +207,7 @@ Public Class GlobalClass
             Dim formatter As New BinaryFormatter
             Dim audioProfiles As List(Of AudioProfile)
 
-            Using mutex As New Mutex(False, "staxrip audio profiles file")
+            Using mutex As New Mutex(False, "staxrip2 audio profiles file")
                 mutex.WaitOne()
                 Using stream As New FileStream(AudioProfilesFile, FileMode.Open, FileAccess.Read, FileShare.Read)
                     audioProfiles = DirectCast(formatter.Deserialize(stream), List(Of AudioProfile))
@@ -242,7 +242,7 @@ Public Class GlobalClass
         Try
             Dim formatter As New BinaryFormatter
 
-            Using mutex As New Mutex(False, "staxrip video encoder profiles file")
+            Using mutex As New Mutex(False, "staxrip2 video encoder profiles file")
                 mutex.WaitOne()
                 Using stream As New FileStream(VideoEncoderProfilesFile, FileMode.Create, FileAccess.Write, FileShare.None)
                     formatter.Serialize(stream, s.VideoEncoderProfiles)
@@ -262,7 +262,7 @@ Public Class GlobalClass
             Dim formatter As New BinaryFormatter
             Dim videoEncoderProfiles As List(Of VideoEncoder)
 
-            Using mutex As New Mutex(False, "staxrip video encoder profiles file")
+            Using mutex As New Mutex(False, "staxrip2 video encoder profiles file")
                 mutex.WaitOne()
                 Using stream As New FileStream(VideoEncoderProfilesFile, FileMode.Open, FileAccess.Read, FileShare.Read)
                     videoEncoderProfiles = DirectCast(formatter.Deserialize(stream), List(Of VideoEncoder))
@@ -297,7 +297,7 @@ Public Class GlobalClass
         Try
             Dim formatter As New BinaryFormatter
 
-            Using mutex As New Mutex(False, "staxrip events file")
+            Using mutex As New Mutex(False, "staxrip2 events file")
                 mutex.WaitOne()
                 Using stream As New FileStream(EventsFile, FileMode.Create, FileAccess.Write, FileShare.None)
                     formatter.Serialize(stream, s.EventCommands)
@@ -317,7 +317,7 @@ Public Class GlobalClass
             Dim formatter As New BinaryFormatter
             Dim events As List(Of EventCommand)
 
-            Using mutex As New Mutex(False, "staxrip events file")
+            Using mutex As New Mutex(False, "staxrip2 events file")
                 mutex.WaitOne()
                 Using stream As New FileStream(EventsFile, FileMode.Open, FileAccess.Read, FileShare.Read)
                     events = DirectCast(formatter.Deserialize(stream), List(Of EventCommand))
@@ -537,7 +537,7 @@ Public Class GlobalClass
             ElseIf JobManager.ActiveJobs.Count = 0 OrElse g.StopAfterCurrentJob Then
                 g.RaiseAppEvent(ApplicationEvent.AfterJobsProcessed)
 
-                If Process.GetProcessesByName("StaxRip").Count = 1 Then
+                If Process.GetProcessesByName("StaxRip2").Count = 1 Then
                     g.ShutdownPC()
                 End If
             Else

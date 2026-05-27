@@ -101,7 +101,7 @@ Public Class LogBuilder
         Dim computerInfo = New ComputerInfo()
 
         If EnvironmentString = "" Then EnvironmentString =
-            "StaxRip:" + g.DefaultCommands.GetApplicationDetails(False, True) + BR +
+            "StaxRip2:" + g.DefaultCommands.GetApplicationDetails(False, True) + BR +
             $"Settings: v{s.Version.Major}.{s.Version.Minor}.{s.Version.Build}{BR}" +
             $"Windows: {OSVersion.VersionString}" + BR +
             "Language:" + CultureInfo.CurrentCulture.EnglishName + BR +
@@ -187,11 +187,11 @@ Public Class LogBuilder
         End If
 
         If proj.SourceFile = "" Then
-            Return Path.Combine(Folder.Temp, "staxrip.log")
+            Return Path.Combine(Folder.Temp, "staxrip2.log")
         ElseIf proj.TempDir = "" Then
-            Return Path.Combine(proj.SourceFile.Dir, proj.SourceFile.FileName + "_staxrip.log")
+            Return Path.Combine(proj.SourceFile.Dir, proj.SourceFile.FileName + "_staxrip2.log")
         Else
-            Return Path.Combine(proj.TempDir, proj.TargetFile.Base + "_staxrip.log")
+            Return Path.Combine(proj.TempDir, proj.TargetFile.Base + "_staxrip2.log")
         End If
     End Function
 End Class

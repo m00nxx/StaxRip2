@@ -22,7 +22,7 @@ Public Class StaxRipUpdate
             Using td As New TaskDialog(Of String)()
                 td.Title = "Check for updates"
                 td.Icon = TaskIcon.Question
-                td.Content = "Would you like StaxRip to check for updates periodically?" + BR +
+                td.Content = "Would you like StaxRip2 to check for updates periodically?" + BR +
                              "Each time it is checked, only these websites are queried:" + BR +
                              "'github.com' and " + BR +
                              "'githubusercontent.com'"

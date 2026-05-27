@@ -1754,7 +1754,7 @@ Partial Public Class MainForm
             p = If(proj IsNot Nothing, proj, SafeSerialization.Deserialize(New Project(), path))
             Log = p.Log
 
-            FileHelp.Delete(IO.Path.Combine(Folder.Temp, "staxrip.log"))
+            FileHelp.Delete(IO.Path.Combine(Folder.Temp, "staxrip2.log"))
             SetBindings(p, True)
 
             Text = $"{path.Base} - {g.DefaultCommands.GetApplicationDetails()}"

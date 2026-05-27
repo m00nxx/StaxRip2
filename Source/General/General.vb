@@ -155,8 +155,8 @@ Public Class Folder
                     }
 
                     td.AddCommand(Path.Combine(Startup, "Settings"), "This is the recommended path as long as you have write permissions. Settings are more bound to their StaxRip version and won't be automatically or accidentally transferred to the next version.", Path.Combine(Startup, "Settings"))
-                    td.AddCommand(Path.Combine(AppDataRoaming, "StaxRip"), "A good choice if you don't have write permissions in the StaxRip folder or if you want to store the settings in a more common place along with other app settings.", Path.Combine(AppDataRoaming, "StaxRip"))
-                    td.AddCommand(Path.Combine(AppDataCommon, "StaxRip"), "This is another option for common settings and also the fallback directory, in case you don't select another directory.", Path.Combine(AppDataCommon, "StaxRip"))
+                    td.AddCommand(Path.Combine(AppDataRoaming, "StaxRip2"), "A good choice if you don't have write permissions in the StaxRip2 folder or if you want to store the settings in a more common place along with other app settings.", Path.Combine(AppDataRoaming, "StaxRip2"))
+                    td.AddCommand(Path.Combine(AppDataCommon, "StaxRip2"), "This is another option for common settings and also the fallback directory, in case you don't select another directory.", Path.Combine(AppDataCommon, "StaxRip2"))
                     td.AddCommand("Browse for custom directory", "You prefer another directory? Feel free to select a directory of your choice. Make sure necessary write permissions are granted.", "Custom")
 
                     Dim dir = td.Show
@@ -165,7 +165,7 @@ Public Class Folder
                     If dir = "Custom" Then
                         Using dialog As New FolderBrowserDialog
                             dialog.SelectedPath = Startup
-                            dir = If(dialog.ShowDialog = DialogResult.OK, dialog.SelectedPath, Path.Combine(AppDataCommon, "StaxRip"))
+                            dir = If(dialog.ShowDialog = DialogResult.OK, dialog.SelectedPath, Path.Combine(AppDataCommon, "StaxRip2"))
                         End Using
                     ElseIf dir = "" Then
                         Process.GetCurrentProcess().Kill()
@@ -175,7 +175,7 @@ Public Class Folder
                         Try
                             Directory.CreateDirectory(dir)
                         Catch
-                            dir = Path.Combine(AppDataCommon, "StaxRip")
+                            dir = Path.Combine(AppDataCommon, "StaxRip2")
 
                             If Not dir.DirExists Then
                                 Directory.CreateDirectory(dir)

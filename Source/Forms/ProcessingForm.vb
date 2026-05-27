@@ -214,7 +214,7 @@ Public Class ProcessingForm
         mbShutdown.AddRange(System.Enum.GetValues(GetType(ShutdownMode)).Cast(Of Object))
         Icon = g.Icon
         NotifyIcon.Icon = g.Icon
-        NotifyIcon.Text = "StaxRip"
+        NotifyIcon.Text = "StaxRip2"
         TaskbarButtonCreatedMessage = Native.RegisterWindowMessage("TaskbarButtonCreated")
         RestoreClientSize(42, 28)
 
@@ -228,7 +228,7 @@ Public Class ProcessingForm
         Next
 
         CMS.Add("-")
-        CMS.Add("Abort", AddressOf Abort, Keys.Escape, "Aborts all job processing of this StaxRip instance.")
+        CMS.Add("Abort", AddressOf Abort, Keys.Escape, "Aborts all job processing of this StaxRip2 instance.")
         CMS.Add("Skip", AddressOf Skip, "Aborts the current job and continues with the next job.")
         StopAfterCurrentJobMenuItem = CMS.Add("Stop After Current Job", AddressOf StopAfterCurrentJob, "Stops all job processing after the current job.")
         CMS.Add("-")

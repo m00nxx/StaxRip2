@@ -104,11 +104,11 @@ This is the way to go if you have questions regarding settings, usage, etc.
 
 # Extraction / Usage
 
-StaxRip is a portable application, so almost everything it needs is already included. 
-This also means, that StaxRip does not have to (and cannot) be installed. 
+StaxRip2 is a portable application, so almost everything it needs is already included.
+This also means, that StaxRip2 does not have to (and cannot) be installed.
 You simply extract the [given archive](https://github.com/m00nxx/StaxRip2/releases/latest) and when you start, StaxRip2 asks you where to store the settings.
 
-It is recommended to choose the first option, which creates a subfolder in the existing startup folder where `StaxRip.exe` is in that you start.
+It is recommended to choose the first option, which creates a subfolder in the existing startup folder where `StaxRip2.exe` is in that you start.
 This ensures, that you start with fresh/new settings as the settings of different versions could be imcompatible with each other,
 which can lead to unwanted side effects like missing functionality or changing encoder parameters. 
 It is also **very important** to **not** run existing jobs on a different StaxRip version as some encoder parameters could have been changed
