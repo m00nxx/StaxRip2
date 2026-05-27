@@ -167,12 +167,13 @@ Assert-Contains $buildDocs "app-only artifact" "Build docs must clarify the CI a
 
 $workflow = Read-RepoFile ".github/workflows/build.yml"
 Assert-Contains $workflow "windows-latest" "GitHub Actions build must run on Windows."
+Assert-Contains $workflow "actions/checkout@v6.0.2" "GitHub Actions build must use a Node 24 compatible checkout action."
 Assert-Contains $workflow "vswhere.exe" "GitHub Actions build must locate MSBuild with vswhere."
-Assert-Contains $workflow "NuGet/setup-nuget" "GitHub Actions build must provision NuGet explicitly."
+Assert-Contains $workflow "NuGet/setup-nuget@v4.0" "GitHub Actions build must provision NuGet with a Node 24 compatible action."
 Assert-Contains $workflow "Tests\SourceChecks.ps1" "GitHub Actions build must run source checks."
 Assert-Contains $workflow "Source\StaxRip.vbproj" "GitHub Actions build must build the app project."
 Assert-Contains $workflow "StaxRip2-Release-x64" "GitHub Actions build must publish the expected artifact."
-Assert-Contains $workflow "actions/upload-artifact" "GitHub Actions build must upload a build artifact."
+Assert-Contains $workflow "actions/upload-artifact@v7.0.1" "GitHub Actions build must upload artifacts with a Node 24 compatible action."
 
 foreach ($buildScriptPath in @("Source/Build.ps1", "Source/BuildAndPack.ps1", "Source/Release.ps1")) {
     $buildScript = Read-RepoFile $buildScriptPath

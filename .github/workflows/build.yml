@@ -15,10 +15,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
 
       - name: Setup NuGet
-        uses: NuGet/setup-nuget@v2
+        uses: NuGet/setup-nuget@v4.0
 
       - name: Locate MSBuild
         id: msbuild
@@ -57,7 +57,7 @@ jobs:
           "artifact=$artifact" >> $env:GITHUB_OUTPUT
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: StaxRip2-Release-x64
           path: ${{ steps.artifact.outputs.artifact }}
