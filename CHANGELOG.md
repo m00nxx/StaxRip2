@@ -1,4 +1,16 @@
-﻿<!--
+﻿StaxRip2 Changelog
+==================
+
+v0.1.0 (2026-05-27)
+-------------------
+
+- First public StaxRip2 fork release.
+- Forked from StaxRip v2.52.3 at commit 7d63507c0962e38a2c231c54e2692ebebb801862.
+- Added a public StaxRip2 fork note to README.
+- Preserved the MIT license and original StaxRip attribution.
+
+
+<!--
 v2.5x.0 (not published yet)
 ====================
 

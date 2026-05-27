@@ -8,6 +8,8 @@ The news of his passing was shared by his sister in the mpv.net repository: http
 
 All credit for the original project remains with the StaxRip authors. This fork preserves the original MIT license.
 
+Versioning note: StaxRip2 uses its own `0.x` release line. The first public StaxRip2 release is `v0.1.0`, based on StaxRip `v2.52.3`; inherited StaxRip version numbers may still appear where they describe upstream history, compatibility, or technical metadata.
+
 -------------
 
 [![GitHub Release](https://img.shields.io/github/v/release/staxrip/staxrip?style=plastic&logo=Github&logoColor=white&label=Release&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip/releases/latest)
