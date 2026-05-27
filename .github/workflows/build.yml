@@ -1,0 +1,63 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build StaxRip2
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Locate MSBuild
+        id: msbuild
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $msbuild = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild\Current\Bin\MSBuild.exe | Select-Object -First 1
+          if (-not $msbuild) {
+              throw "MSBuild not found."
+          }
+          "path=$msbuild" >> $env:GITHUB_OUTPUT
+
+      - name: Restore packages
+        shell: pwsh
+        run: nuget restore Source\StaxRip.sln
+
+      - name: Run source checks
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File Tests\SourceChecks.ps1
+
+      - name: Build app
+        shell: pwsh
+        run: |
+          & "${{ steps.msbuild.outputs.path }}" Source\StaxRip.vbproj /t:Build /p:Configuration=Release /p:Platform=x64 /m /v:minimal
+
+      - name: Collect artifact
+        id: artifact
+        shell: pwsh
+        run: |
+          $artifact = Join-Path $env:RUNNER_TEMP "StaxRip2-Release-x64"
+          New-Item -ItemType Directory -Path $artifact -Force | Out-Null
+          Copy-Item Source\bin\StaxRip2.exe $artifact
+          Copy-Item Source\bin\StaxRip2.exe.config $artifact -ErrorAction SilentlyContinue
+          Copy-Item Source\bin\*.dll $artifact -ErrorAction SilentlyContinue
+          Copy-Item Source\bin\*.pdb $artifact -ErrorAction SilentlyContinue
+          "artifact=$artifact" >> $env:GITHUB_OUTPUT
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StaxRip2-Release-x64
+          path: ${{ steps.artifact.outputs.artifact }}

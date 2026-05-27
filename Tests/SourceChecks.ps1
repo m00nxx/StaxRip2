@@ -152,5 +152,25 @@ Assert-Contains $buildDocs "Microsoft.VisualStudio.Workload.NativeDesktop" "Buil
 Assert-Contains $buildDocs "Microsoft.Cpp.Default.props" "Build docs must explain the missing C++ props error."
 Assert-Contains $buildDocs "Source/StaxRip.sln" "Build docs must explain full solution builds."
 Assert-Contains $buildDocs "Source/StaxRip.vbproj" "Build docs must explain app-only builds."
+Assert-Contains $buildDocs "GitHub Actions" "Build docs must describe the GitHub Actions build."
+Assert-Contains $buildDocs "StaxRip2-Release-x64" "Build docs must document the CI artifact name."
+Assert-Contains $buildDocs "app-only artifact" "Build docs must clarify the CI artifact scope."
+
+$workflow = Read-RepoFile ".github/workflows/build.yml"
+Assert-Contains $workflow "windows-latest" "GitHub Actions build must run on Windows."
+Assert-Contains $workflow "vswhere.exe" "GitHub Actions build must locate MSBuild with vswhere."
+Assert-Contains $workflow "NuGet/setup-nuget" "GitHub Actions build must provision NuGet explicitly."
+Assert-Contains $workflow "Tests\SourceChecks.ps1" "GitHub Actions build must run source checks."
+Assert-Contains $workflow "Source\StaxRip.vbproj" "GitHub Actions build must build the app project."
+Assert-Contains $workflow "StaxRip2-Release-x64" "GitHub Actions build must publish the expected artifact."
+Assert-Contains $workflow "actions/upload-artifact" "GitHub Actions build must upload a build artifact."
+
+foreach ($buildScriptPath in @("Source/Build.ps1", "Source/BuildAndPack.ps1", "Source/Release.ps1")) {
+    $buildScript = Read-RepoFile $buildScriptPath
+    Assert-Contains $buildScript "StaxRip2.exe" "$buildScriptPath must package the StaxRip2 executable."
+    Assert-Contains $buildScript "StaxRip2" "$buildScriptPath must use fork-specific package names."
+    Assert-NotContains $buildScript "StaxRip.exe" "$buildScriptPath must not package the upstream executable."
+    Assert-NotContains $buildScript "A:\StaxRip-Releases" "$buildScriptPath must not require the maintainer-specific release drive."
+}
 
 Write-Host "Source checks passed."

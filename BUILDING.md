@@ -50,6 +50,14 @@ Expected output:
 Source\bin\StaxRip2.exe
 ```
 
+## GitHub Actions
+
+The repository includes a GitHub Actions workflow at `.github/workflows/build.yml`.
+
+The workflow runs on Windows, restores NuGet packages, runs `Tests/SourceChecks.ps1`, builds `Source/StaxRip.vbproj`, and uploads an artifact named `StaxRip2-Release-x64`.
+
+This is an app-only artifact. It contains the compiled executable and nearby build outputs, but it is not a complete release package with bundled runtime tools, fonts, and application assets.
+
 ## Full Solution Build
 
 This builds the main application and FrameServer:

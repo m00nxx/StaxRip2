@@ -1,12 +1,12 @@
 ﻿$solution               = $PSScriptRoot + '\StaxRip.sln'
 $binDirectory           = $PSScriptRoot + '\bin'
-$appExe                 = $binDirectory + '\StaxRip.exe'
+$appExe                 = $binDirectory + '\StaxRip2.exe'
 $7zDirectory            = ''
 $7zExe                  = $7zDirectory + '7z.exe'
 $msBuildDirectory       = ''
 $msBuildExe             = $msBuildDirectory + 'MSBuild.exe'
-$destinationDirectory   = 'A:\StaxRip-Releases'
-$targetDirectory         = $destinationDirectory + '\StaxRip'   # is extended after solution is build
+$destinationDirectory   = Join-Path (Split-Path $PSScriptRoot -Parent) 'Artifacts'
+$targetDirectory        = Join-Path $destinationDirectory 'StaxRip2'   # is extended after solution is built
 $includeProjectFiles    = @('*.config', '*.cpp', '*.h', '*.md', '*.ps1', '*.rc', '*.resx', '*.sln', '*.vb', '*.vbproj')
 $excludeBinPatterns = @(
     '\\CineSlice'
