@@ -122,10 +122,19 @@ Public Class GlobalClass
 
     Sub LoadSettings()
         Try
-            Using mutex As New Mutex(False, "staxrip settings file")
-                mutex.WaitOne()
-                s = SafeSerialization.Deserialize(New ApplicationSettings, SettingsFile)
-                mutex.ReleaseMutex()
+            Using mutex As New Mutex(False, "staxrip2 settings file")
+                Dim mutexAcquired = False
+
+                Try
+                    mutex.WaitOne()
+                    mutexAcquired = True
+
+                    If ResetLegacyStaxRipSettings(SettingsFile) Then Exit Sub
+
+                    s = SafeSerialization.Deserialize(New ApplicationSettings, SettingsFile)
+                Finally
+                    If mutexAcquired Then mutex.ReleaseMutex()
+                End Try
             End Using
         Catch ex As Exception
             Using td As New TaskDialog(Of String)
@@ -152,6 +161,25 @@ Public Class GlobalClass
             End Using
         End Try
     End Sub
+
+    Private Function ResetLegacyStaxRipSettings(settingsPath As String) As Boolean
+        If Not File.Exists(settingsPath) Then Return False
+
+        Dim settingsBytes = File.ReadAllBytes(settingsPath)
+        Dim settingsText = Encoding.Default.GetString(settingsBytes)
+
+        If Not settingsText.Contains("StaxRip, Version=") Then Return False
+
+        Dim backupPath = Path.Combine(
+            Path.GetDirectoryName(settingsPath),
+            "Settings.LegacyStaxRip." & DateTime.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture) & ".dat")
+
+        File.Move(settingsPath, backupPath)
+        s = New ApplicationSettings
+        s.Init()
+
+        Return True
+    End Function
 
     Sub SaveAudioProfiles()
         If Not s?.SaveAudioProfilesSeparately Then Return
@@ -844,7 +872,7 @@ Public Class GlobalClass
 
     ReadOnly Property SettingsFolderExists As Boolean
         Get
-            Dim settingsLocation = Registry.CurrentUser.GetString("Software\StaxRip\SettingsLocation", Nothing)
+            Dim settingsLocation = Registry.CurrentUser.GetString("Software\StaxRip2\SettingsLocation", Nothing)
             Return Not String.IsNullOrWhiteSpace(settingsLocation) AndAlso Directory.Exists(settingsLocation)
         End Get
     End Property

@@ -41,6 +41,19 @@ Assert-Contains $package "If Not IO.Directory.Exists(confFolder) Then Exit Sub" 
 
 $globalClass = Read-RepoFile "Source/General/GlobalClass.vb"
 Assert-Contains $globalClass "Return Not String.IsNullOrWhiteSpace(settingsLocation) AndAlso Directory.Exists(settingsLocation)" "SettingsFolderExists must check the actual directory."
+Assert-Contains $globalClass 'Software\StaxRip2\SettingsLocation' "SettingsFolderExists must use the StaxRip2 registry key."
+Assert-Contains $globalClass 'Settings.LegacyStaxRip.' "Legacy StaxRip settings must be quarantined instead of loaded by the fork."
+
+$applicationSettings = Read-RepoFile "Source/General/ApplicationSettings.vb"
+Assert-Contains $applicationSettings "Fonts = If(Fonts, New Dictionary(Of FontCategory, String))" "Fresh settings initialization must tolerate missing font settings."
+Assert-Contains $applicationSettings "If AudioProfiles Is Nothing Then Return" "Settings migration must tolerate missing audio profiles."
+Assert-Contains $applicationSettings "ap?.Migrate()" "Settings migration must skip null audio profile entries."
+
+$general = Read-RepoFile "Source/General/General.vb"
+Assert-Contains $general 'Software\StaxRip2\SettingsLocation' "Settings directory selection must use the StaxRip2 registry key."
+Assert-NotContains $general 'Software\StaxRip\SettingsLocation' "Settings directory selection must not reuse the original StaxRip registry key."
+Assert-Contains $general "Dim settingsFileExists = File.Exists(path)" "Fresh settings initialization must track whether a settings file existed."
+Assert-Contains $general "If settingsFileExists AndAlso safeInstance.WasUpdated Then" "Fresh settings initialization must not immediately serialize default settings."
 
 $solution = Read-RepoFile "Source/StaxRip.sln"
 Assert-Contains $solution "Release|x64.ActiveCfg = Release|x64" "Release x64 must build the Release configuration."
@@ -63,9 +76,13 @@ Assert-NotContains $updateChecker 'api.github.com/repos/staxrip/staxrip/releases
 $mainForm = Read-RepoFile "Source/Forms/MainForm.vb"
 Assert-Contains $mainForm 'https://github.com/m00nxx/StaxRip2' "Help menu must point to the StaxRip2 repository."
 Assert-Contains $mainForm 'https://github.com/m00nxx/StaxRip2/issues/new/choose' "Issue reporting must point to the StaxRip2 repository."
+Assert-Contains $mainForm 'Startup template failed to load' "Startup template load failures must not recurse indefinitely."
+Assert-Contains $mainForm 'Startup template failed to initialize' "Startup template initialization failures must not recurse indefinitely."
+Assert-Contains $mainForm 'Return OpenProject(startupTemplatePath, False)' "Startup template fallback must bypass save-current recursion."
 
 $readme = Read-RepoFile "README.md"
 Assert-Contains $readme "[Building from source](BUILDING.md)" "README must link to source build instructions."
+Assert-Contains $readme "StaxRip2 uses its own settings registry key" "README must document StaxRip2 settings isolation."
 
 $buildDocs = Read-RepoFile "BUILDING.md"
 Assert-Contains $buildDocs "Microsoft.VisualStudio.Workload.VCTools" "Build docs must list the Build Tools C++ workload."

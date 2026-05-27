@@ -13,6 +13,9 @@ v0.1.0 (2026-05-27)
 - Fixed solution Release configurations so they build Release binaries.
 - Added source regression checks for the fork startup and versioning fixes.
 - Added source build documentation for Visual Studio, Build Tools, and the native FrameServer C++ workload.
+- Isolated StaxRip2 settings from original StaxRip settings and quarantined incompatible legacy settings files at startup.
+- Fixed first-run settings initialization so missing settings files do not trigger immediate unsafe serialization.
+- Fixed startup template fallback recursion that could end in a stack overflow.
 - Preserved the MIT license and original StaxRip attribution.
 
 

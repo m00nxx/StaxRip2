@@ -10,6 +10,8 @@ All credit for the original project remains with the StaxRip authors. This fork 
 
 Versioning note: StaxRip2 uses its own `0.x` release line. The first public StaxRip2 release is `v0.1.0`, based on StaxRip `v2.52.3`; inherited StaxRip version numbers may still appear where they describe upstream history, compatibility, or technical metadata.
 
+Settings note: StaxRip2 uses its own settings registry key and does not reuse the original StaxRip settings location. If an incompatible legacy `Settings.dat` from StaxRip is found in the selected settings folder, it is moved aside and StaxRip2 starts with fresh settings.
+
 -------------
 
 [![GitHub Release](https://img.shields.io/github/v/release/m00nxx/StaxRip2?style=plastic&logo=Github&logoColor=white&label=Release&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2/releases/latest)

@@ -134,6 +134,7 @@ Public Class ApplicationSettings
 
     Sub Init() Implements ISafeSerialization.Init
         Versions = If(Versions, New Dictionary(Of String, Integer))
+        Fonts = If(Fonts, New Dictionary(Of FontCategory, String))
 
         If Check(Storage, "Misc", 3) Then
             Storage = New ObjectStorage
@@ -378,8 +379,10 @@ Public Class ApplicationSettings
     End Sub
 
     Sub Migrate()
+        If AudioProfiles Is Nothing Then Return
+
         For Each ap In AudioProfiles
-            ap.Migrate()
+            ap?.Migrate()
         Next
     End Sub
 

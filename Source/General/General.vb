@@ -140,13 +140,13 @@ Public Class Folder
     Shared ReadOnly Property Settings As String
         Get
             If SettingsValue Is Nothing Then
-                For Each location In Registry.CurrentUser.GetValueNames("Software\StaxRip\SettingsLocation")
+                For Each location In Registry.CurrentUser.GetValueNames("Software\StaxRip2\SettingsLocation")
                     If Not Directory.Exists(location) Then
-                        Registry.CurrentUser.DeleteValue("Software\StaxRip\SettingsLocation", location)
+                        Registry.CurrentUser.DeleteValue("Software\StaxRip2\SettingsLocation", location)
                     End If
                 Next
 
-                SettingsValue = Registry.CurrentUser.GetString("Software\StaxRip\SettingsLocation", Startup)
+                SettingsValue = Registry.CurrentUser.GetString("Software\StaxRip2\SettingsLocation", Startup)
 
                 If Not Directory.Exists(SettingsValue) Then
                     Dim td As New TaskDialog(Of String) With {
@@ -199,7 +199,7 @@ Public Class Folder
                     FolderHelp.Create(Path.Combine(dir, "Plugins", "VapourSynth"))
                     FolderHelp.Create(Path.Combine(dir, "Plugins", "Dual"))
 
-                    Registry.CurrentUser.Write("Software\StaxRip\SettingsLocation", Folder.Startup, dir)
+                    Registry.CurrentUser.Write("Software\StaxRip2\SettingsLocation", Folder.Startup, dir)
                     SettingsValue = dir
                 End If
             End If
@@ -328,8 +328,9 @@ Public Class SafeSerialization
 
     Shared Function Deserialize(Of T)(instance As T, path As String) As T
         Dim safeInstance = DirectCast(instance, ISafeSerialization)
+        Dim settingsFileExists = File.Exists(path)
 
-        If File.Exists(path) Then
+        If settingsFileExists Then
             Dim list As List(Of Object)
             Dim bf As New BinaryFormatter
 
@@ -362,7 +363,7 @@ Public Class SafeSerialization
 
         safeInstance.Init()
 
-        If safeInstance.WasUpdated Then
+        If settingsFileExists AndAlso safeInstance.WasUpdated Then
             safeInstance.WasUpdated = False
             Serialize(instance, path)
         End If
@@ -386,8 +387,6 @@ Public Class SafeSerialization
     Private Shared Function GetObjectInstance(ba As Byte()) As Object
         Using ms As New MemoryStream(ba)
             Dim bf As New BinaryFormatter
-            'Static binder As New LegacySerializationBinder
-            'bf.Binder = binder
             Return bf.Deserialize(ms)
         End Using
     End Function
@@ -416,18 +415,6 @@ Public Class SafeSerialization
         Return False
     End Function
 
-    'legacy
-    Private Class LegacySerializationBinder
-        Inherits SerializationBinder
-
-        Overrides Function BindToType(assemblyName As String, typeName As String) As Type
-            'If typeName.Contains("CLIEncoder") Then
-            '    typeName = typeName.Replace("CLIEncoder", "CmdlEncoder")
-            'End If
-
-            Return Type.GetType(typeName)
-        End Function
-    End Class
 End Class
 
 Public Interface ISafeSerialization

@@ -1718,7 +1718,14 @@ Partial Public Class MainForm
 
             Return OpenProject(p, path)
         Catch ex As Exception
-            OpenProject(g.StartupTemplatePath)
+            Dim startupTemplatePath = g.StartupTemplatePath
+
+            If String.Equals(path, startupTemplatePath, StringComparison.OrdinalIgnoreCase) Then
+                g.ShowException(ex, "Startup template failed to load", startupTemplatePath)
+                Return False
+            End If
+
+            Return OpenProject(startupTemplatePath, False)
         End Try
     End Function
 
@@ -1828,7 +1835,14 @@ Partial Public Class MainForm
 
             Return True
         Catch ex As Exception
-            OpenProject(g.StartupTemplatePath)
+            Dim startupTemplatePath = g.StartupTemplatePath
+
+            If String.Equals(path, startupTemplatePath, StringComparison.OrdinalIgnoreCase) Then
+                g.ShowException(ex, "Startup template failed to initialize", startupTemplatePath)
+                Return False
+            End If
+
+            Return OpenProject(startupTemplatePath, False)
         Finally
             SkipAssistant = False
         End Try
