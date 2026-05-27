@@ -115,6 +115,10 @@ Assert-Contains $mainForm "NormalizeCommandLineArguments(ParseCommandLine(comman
 Assert-Contains $mainForm 'arg.StartsWith("-" & NameOf(LoadTemplate) & ":", StringComparison.OrdinalIgnoreCase)' "LoadTemplate command-line arguments must tolerate unquoted spaces."
 Assert-NotContains $mainForm '"staxrip.log"' "Main form runtime cleanup must not use upstream log filenames."
 
+$mainFormShowSettings = Read-RepoFile "Source/Forms/MainForm_ShowSettings.vb"
+Assert-Contains $mainFormShowSettings "Dim sourceFilters = If(sourceCategory?.Filters, New List(Of VideoFilter))" "Filter preference settings must tolerate a missing Source category."
+Assert-NotContains $mainFormShowSettings ".First.Filters" "Filter preference settings must not assume Source filter categories exist."
+
 $globalClassSource = Read-RepoFile "Source/General/GlobalClass.vb"
 Assert-NotContains $globalClassSource "StaxRip2ExceptionTrace.log" "Temporary exception trace logging must not be committed."
 
@@ -134,6 +138,11 @@ Assert-NotContains $logBuilder '"staxrip.log"' "Diagnostic logs must not use ups
 
 $imageUtils = Read-RepoFile "Source/UI/ImageUtils.vb"
 Assert-NotContains $imageUtils 'MsgWarn("Correct font was not found, using default instead!")' "Missing icon fonts must not show a startup warning dialog."
+
+$previewForm = Read-RepoFile "Source/Forms/PreviewForm.vb"
+Assert-Contains $previewForm "ImageCodecInfo.GetImageEncoders.FirstOrDefault" "Preview image saving must tolerate a missing JPEG encoder."
+Assert-Contains $previewForm "If info Is Nothing Then" "Preview image saving must check JPEG encoder lookup results."
+Assert-NotContains $previewForm "ImageCodecInfo.GetImageEncoders.Where(Function(arg) arg.FormatID = ImageFormat.Jpeg.Guid).First" "Preview image saving must not assume a JPEG encoder exists."
 
 $readme = Read-RepoFile "README.md"
 Assert-Contains $readme "[Building from source](BUILDING.md)" "README must link to source build instructions."

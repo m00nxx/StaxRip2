@@ -944,7 +944,11 @@ Public Class PreviewForm
             s.Storage.SetInt("preview compression quality", result.ToInt)
             Dim params = New EncoderParameters(1)
             params.Param(0) = New EncoderParameter(Encoder.Quality, result.ToInt)
-            Dim info = ImageCodecInfo.GetImageEncoders.Where(Function(arg) arg.FormatID = ImageFormat.Jpeg.Guid).First
+            Dim info = ImageCodecInfo.GetImageEncoders.FirstOrDefault(Function(arg) arg.FormatID = ImageFormat.Jpeg.Guid)
+            If info Is Nothing Then
+                g.ShowException(New Exception("JPEG encoder was not found."))
+                Exit Sub
+            End If
             BitmapUtil.CreateBitmap(FrameServer, Renderer.Position).Save(path, info, params)
         End If
     End Sub

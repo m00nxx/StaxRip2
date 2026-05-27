@@ -514,11 +514,13 @@ Partial Public Class MainForm
 
     Function AddFilterPreferences(ui As SimpleUI, pagePath As String, preferences As StringPairList, profiles As List(Of FilterCategory)) As BindingSource
         Dim filterPage = ui.CreateDataPage(pagePath)
+        Dim sourceCategory = profiles?.FirstOrDefault(Function(v) v.Name = "Source")
+        Dim sourceFilters = If(sourceCategory?.Filters, New List(Of VideoFilter))
 
         Dim fn = Function() As StringPairList
                      Dim ret As New StringPairList From {{" Filters Menu", "StaxRip allows to assign a source filter profile to a particular source file type or format. The source filter profiles can be customized by right-clicking the filters menu in the main dialog."}}
 
-                     For Each i In profiles.Where(Function(v) v.Name = "Source").First.Filters
+                     For Each i In sourceFilters
                          If i.Script <> "" Then
                              ret.Add(i.Name, i.Script)
                          End If
@@ -537,8 +539,7 @@ Partial Public Class MainForm
         c2.DataPropertyName = "Value"
         c2.HeaderText = "Source Filter"
 
-        Dim filterNames = profiles.Where(
-            Function(v) v.Name = "Source").First.Filters.Where(
+        Dim filterNames = sourceFilters.Where(
                 Function(v) v.Name <> "Automatic" AndAlso
                             v.Name <> "Manual" AndAlso Not v.Name.EndsWith("...")).Select(
                                 Function(v) v.Name).Sort.ToArray
