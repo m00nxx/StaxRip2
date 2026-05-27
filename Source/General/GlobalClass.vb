@@ -844,7 +844,8 @@ Public Class GlobalClass
 
     ReadOnly Property SettingsFolderExists As Boolean
         Get
-            Return Not String.IsNullOrWhiteSpace(Registry.CurrentUser.GetString("Software\StaxRip\SettingsLocation", Folder.Startup))
+            Dim settingsLocation = Registry.CurrentUser.GetString("Software\StaxRip\SettingsLocation", Nothing)
+            Return Not String.IsNullOrWhiteSpace(settingsLocation) AndAlso Directory.Exists(settingsLocation)
         End Get
     End Property
 
@@ -1638,7 +1639,7 @@ Public Class GlobalClass
     End Sub
 
     Sub ShowWikiPage(title As String)
-        ShellExecute($"https://github.com/staxrip/staxrip/wiki/{title}")
+        ShellExecute($"https://github.com/m00nxx/StaxRip2/wiki/{title}")
     End Sub
 
     Sub OnUnhandledException(sender As Object, e As ThreadExceptionEventArgs)
@@ -1701,7 +1702,7 @@ Public Class GlobalClass
             End If
 
             g.SelectFileWithExplorer(fp)
-            g.ShellExecute("https://github.com/staxrip/staxrip/issues")
+            g.ShellExecute("https://github.com/m00nxx/StaxRip2/issues")
         End If
     End Sub
 

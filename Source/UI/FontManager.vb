@@ -11,6 +11,10 @@ Public NotInheritable Class FontManager
     Public Const DefaultFontSize As Single = 9.0
     Public Const DefaultThumbnailFontSize As Single = 10.0
 
+    Private Shared Function GetUIScaleFactor() As Single
+        Return If(s Is Nothing, 1.0F, s.UIScaleFactor)
+    End Function
+
     Public Shared Sub Init()
         For Each category As FontCategory In [Enum].GetValues(GetType(FontCategory)).Cast(Of FontCategory)().Skip(1)
             AddCollection(category)
@@ -23,19 +27,28 @@ Public NotInheritable Class FontManager
 
     Public Shared Sub AddCollection(category As FontCategory)
         Dim collection As New PrivateFontCollection()
-        Dim fontFiles = Directory.GetFiles(Path.Combine(Folder.Fonts, category.ToString()), "*.ttf", SearchOption.AllDirectories)
+        Dim fontFolder = Path.Combine(Folder.Fonts, category.ToString())
 
-        For Each fontFile In fontFiles
-            collection.AddFontFile(fontFile)
-        Next
+        If Directory.Exists(fontFolder) Then
+            For Each fontFile In Directory.GetFiles(fontFolder, "*.ttf", SearchOption.AllDirectories)
+                Try
+                    collection.AddFontFile(fontFile)
+                Catch ex As Exception
+                    System.Diagnostics.Debug.WriteLine(ex.Message)
+                End Try
+            Next
+        End If
 
         If g.SettingsFolderExists Then
             If Folder.UserFonts.DirExists() Then
                 Dim subfolderPath = Path.Combine(Folder.UserFonts, category.ToString())
                 If subfolderPath.DirExists() Then
-                    fontFiles = Directory.GetFiles(subfolderPath, "*.ttf", SearchOption.AllDirectories)
-                    For Each fontFile In fontFiles
-                        collection.AddFontFile(fontFile)
+                    For Each fontFile In Directory.GetFiles(subfolderPath, "*.ttf", SearchOption.AllDirectories)
+                        Try
+                            collection.AddFontFile(fontFile)
+                        Catch ex As Exception
+                            System.Diagnostics.Debug.WriteLine(ex.Message)
+                        End Try
                     Next
                 End If
             End If
@@ -76,13 +89,13 @@ Public NotInheritable Class FontManager
             Return GetFont(family, size, fontStyle)
         End If
 
-        Return New Font(_fontCollections.First().Value.Families.First(), size * s.UIScaleFactor, fontStyle, graphicsUnit, gdiCharSet)
+        Return New Font(SystemFonts.MessageBoxFont.FontFamily, size * GetUIScaleFactor(), fontStyle, graphicsUnit, gdiCharSet)
     End Function
 
     Shared Function GetFont(fontFamily As FontFamily, Optional size As Single = DefaultFontSize, Optional fontStyle As FontStyle = FontStyle.Regular, Optional graphicsUnit As GraphicsUnit = GraphicsUnit.Point, Optional gdiCharSet As Byte = 0) As Font
         If Not _fontCollections.Any() Then Init()
 
-        Return New Font(fontFamily, size * s.UIScaleFactor, fontStyle, graphicsUnit, gdiCharSet)
+        Return New Font(fontFamily, size * GetUIScaleFactor(), fontStyle, graphicsUnit, gdiCharSet)
     End Function
 
     Shared Function GetCodeFont(Optional sizeOffset As Single = 0.0, Optional fontStyle As FontStyle = FontStyle.Regular) As Font

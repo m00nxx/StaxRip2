@@ -7,6 +7,11 @@ v0.1.0 (2026-05-27)
 - First public StaxRip2 fork release.
 - Forked from StaxRip v2.52.3 at commit 7d63507c0962e38a2c231c54e2692ebebb801862.
 - Added a public StaxRip2 fork note to README.
+- Renamed application metadata and output assembly to StaxRip2 v0.1.0.
+- Hardened startup when bundled Fonts or Apps/Conf folders are missing.
+- Updated in-app help, issue reporting, and update checks to target the StaxRip2 fork.
+- Fixed solution Release configurations so they build Release binaries.
+- Added source regression checks for the fork startup and versioning fixes.
 - Preserved the MIT license and original StaxRip attribution.
 
 

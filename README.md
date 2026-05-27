@@ -12,10 +12,10 @@ Versioning note: StaxRip2 uses its own `0.x` release line. The first public Stax
 
 -------------
 
-[![GitHub Release](https://img.shields.io/github/v/release/staxrip/staxrip?style=plastic&logo=Github&logoColor=white&label=Release&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip/releases/latest)
-[![GitHub License](https://img.shields.io/github/license/staxrip/staxrip?style=plastic&logo=GitHub&logoColor=white&label=License&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip/blob/master/License.txt)
-[![GitHub all releases](https://img.shields.io/github/downloads/staxrip/staxrip/total?style=plastic&logo=GitHub&logoColor=white&label=Total%20Downloads&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip/releases/latest)
-[![GitHub Repo stars](https://img.shields.io/github/stars/staxrip/staxrip?style=plastic&logo=GitHub&logoColor=white&label=Stars&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip)
+[![GitHub Release](https://img.shields.io/github/v/release/m00nxx/StaxRip2?style=plastic&logo=Github&logoColor=white&label=Release&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2/releases/latest)
+[![GitHub License](https://img.shields.io/github/license/m00nxx/StaxRip2?style=plastic&logo=GitHub&logoColor=white&label=License&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2/blob/master/License.txt)
+[![GitHub all releases](https://img.shields.io/github/downloads/m00nxx/StaxRip2/total?style=plastic&logo=GitHub&logoColor=white&label=Total%20Downloads&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2/releases/latest)
+[![GitHub Repo stars](https://img.shields.io/github/stars/m00nxx/StaxRip2?style=plastic&logo=GitHub&logoColor=white&label=Stars&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2)
 [![Discord](https://img.shields.io/badge/Discord-Join%20us?style=plastic&logo=discord&logoColor=white&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://discord.gg/uz8pVR79Bd)  
 [![Static Badge](https://img.shields.io/badge/Patreon-F16061?style=plastic&logo=Patreon&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://www.patreon.com/Dendraspis)
 [![Static Badge](https://img.shields.io/badge/Ko--fi-F16061?style=plastic&logo=Ko-Fi&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://ko-fi.com/Dendraspis)
@@ -37,27 +37,27 @@ There are a lot of resources in StaxRip-related communities. Users are strongly 
 
 # Documentation & useful links
 
-[![GitHub Release](https://img.shields.io/github/v/release/staxrip/staxrip?style=plastic&logo=Github&logoColor=white&label=Release&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip/releases/latest)
-[![GitHub License](https://img.shields.io/github/license/staxrip/staxrip?style=plastic&logo=GitHub&logoColor=white&label=License&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip/blob/master/License.txt)
-[![GitHub all releases](https://img.shields.io/github/downloads/staxrip/staxrip/total?style=plastic&logo=GitHub&logoColor=white&label=Total%20Downloads&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip/releases/latest)
+[![GitHub Release](https://img.shields.io/github/v/release/m00nxx/StaxRip2?style=plastic&logo=Github&logoColor=white&label=Release&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2/releases/latest)
+[![GitHub License](https://img.shields.io/github/license/m00nxx/StaxRip2?style=plastic&logo=GitHub&logoColor=white&label=License&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2/blob/master/License.txt)
+[![GitHub all releases](https://img.shields.io/github/downloads/m00nxx/StaxRip2/total?style=plastic&logo=GitHub&logoColor=white&label=Total%20Downloads&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2/releases/latest)
 
-- You can find plenty of information and instructions on [Wiki](https://github.com/staxrip/staxrip/wiki).
-- For the current changelog click here: [Changelog](https://github.com/staxrip/staxrip/blob/master/CHANGELOG.md) - it's worth taking a look at it.
-    - Supporters please use the [Changelog for Supporters](https://github.com/staxrip/staxrip/blob/master/CHANGELOG-SUPPORTER.md).
-- To download StaxRip browse through all [Releases](https://github.com/staxrip/staxrip/releases) or jump directly to the [Latest Release](https://github.com/staxrip/staxrip/releases/latest). 
+- You can find plenty of information and instructions in the [documentation](https://github.com/m00nxx/StaxRip2/tree/master/Docs/README.md).
+- For the current changelog click here: [Changelog](https://github.com/m00nxx/StaxRip2/blob/master/CHANGELOG.md) - it's worth taking a look at it.
+    - Supporters please use the [Changelog for Supporters](https://github.com/m00nxx/StaxRip2/blob/master/CHANGELOG-SUPPORTER.md).
+- To download StaxRip2 browse through all [Releases](https://github.com/m00nxx/StaxRip2/releases) or jump directly to the [Latest Release](https://github.com/m00nxx/StaxRip2/releases/latest).
 
 # Contribution / Support
 
-[![GitHub License](https://img.shields.io/github/license/staxrip/staxrip?style=plastic&logo=GitHub&logoColor=white&label=License&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/staxrip/staxrip/blob/master/License.txt)
+[![GitHub License](https://img.shields.io/github/license/m00nxx/StaxRip2?style=plastic&logo=GitHub&logoColor=white&label=License&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2/blob/master/License.txt)
 [![Discord](https://img.shields.io/badge/Discord-Join%20us?style=plastic&logo=discord&logoColor=white&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://discord.gg/uz8pVR79Bd)  
 [![Static Badge](https://img.shields.io/badge/Patreon-F16061?style=plastic&logo=Patreon&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://www.patreon.com/Dendraspis)
 [![Static Badge](https://img.shields.io/badge/Ko--fi-F16061?style=plastic&logo=Ko-Fi&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://ko-fi.com/Dendraspis)
 [![Static Badge](https://img.shields.io/badge/BuyMeACoffee-BuyMeACoffee?style=plastic&logo=BuyMeACoffee&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://www.buymeacoffee.com/Dendraspis)
 
-StaxRip is free to use under MIT license. If you want to contribute, you can report issues, open pull requests for bug fixes and extentions or you can donate.
+StaxRip2 is free to use under the MIT license. If you want to contribute, you can report issues or open pull requests for bug fixes and extensions.
 
 ### **Donation**
-If you want to donate to support StaxRip and keep it alive, you can do it by using those links:
+If you want to support the original StaxRip project, you can do it by using those links:
 
 - [![Static Badge](https://img.shields.io/badge/Patreon-F16061?style=plastic&logo=Patreon&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://www.patreon.com/Dendraspis) https://www.patreon.com/Dendraspis
 - [![Static Badge](https://img.shields.io/badge/Ko--fi-F16061?style=plastic&logo=Ko-Fi&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://ko-fi.com/dendraspis) https://ko-fi.com/Dendraspis
@@ -66,10 +66,10 @@ If you want to donate to support StaxRip and keep it alive, you can do it by usi
 Any contribution is highly appreciated! 
 
 ### **Bug Reports / Feature Requests**
-- Please try the [Latest Release](https://github.com/staxrip/staxrip/releases/latest) first. Usually you will find that many outstanding bugs are already fixed in the latest release versions.
-- You can also have a look at the [Changelog](https://github.com/staxrip/staxrip/blob/master/CHANGELOG.md) to see if there is an entry already made for the bug/feature request you are experiencing/desiring.
-    - Supporters please use the [Changelog for Supporters](https://github.com/staxrip/staxrip/blob/master/CHANGELOG-SUPPORTER.md) instead.
-- If the [Latest Release](https://github.com/staxrip/staxrip/releases/latest) does not solve your problem, please use the [Issue Tracker](https://github.com/staxrip/staxrip/issues). You need to be as precise as possible using the Issue Tracker template when opening a thread in it.
+- Please try the [Latest Release](https://github.com/m00nxx/StaxRip2/releases/latest) first. Usually you will find that many outstanding bugs are already fixed in the latest release versions.
+- You can also have a look at the [Changelog](https://github.com/m00nxx/StaxRip2/blob/master/CHANGELOG.md) to see if there is an entry already made for the bug/feature request you are experiencing/desiring.
+    - Supporters please use the [Changelog for Supporters](https://github.com/m00nxx/StaxRip2/blob/master/CHANGELOG-SUPPORTER.md) instead.
+- If the [Latest Release](https://github.com/m00nxx/StaxRip2/releases/latest) does not solve your problem, please use the [Issue Tracker](https://github.com/m00nxx/StaxRip2/issues). You need to be as precise as possible using the Issue Tracker template when opening a thread in it.
 
 ### Community
 - Feel free to join in the [StaxRip Community on Discord](https://discord.gg/uz8pVR79Bd) , where you can chat and share knowledge with us and other StaxRip users. 
@@ -103,7 +103,7 @@ This is the way to go if you have questions regarding settings, usage, etc.
 
 StaxRip is a portable application, so almost everything it needs is already included. 
 This also means, that StaxRip does not have to (and cannot) be installed. 
-You simply extract the [given archive](https://github.com/staxrip/staxrip/releases/latest) and when you start, StaxRip asks you where to store the settings.
+You simply extract the [given archive](https://github.com/m00nxx/StaxRip2/releases/latest) and when you start, StaxRip2 asks you where to store the settings.
 
 It is recommended to choose the first option, which creates a subfolder in the existing startup folder where `StaxRip.exe` is in that you start.
 This ensures, that you start with fresh/new settings as the settings of different versions could be imcompatible with each other,
@@ -119,12 +119,12 @@ Whenever this is possible an `UPDATE` archive is also released so you can just d
 
 # Screenshots
 
-![Main Window](https://github.com/staxrip/staxrip/blob/master/Images/Screenshots/MainWindow2.png)
+![Main Window](https://github.com/m00nxx/StaxRip2/blob/master/Images/Screenshots/MainWindow2.png)
 
-![Code Editor](https://github.com/staxrip/staxrip/blob/master/Images/Screenshots/FilterProfiles.png)
+![Code Editor](https://github.com/m00nxx/StaxRip2/blob/master/Images/Screenshots/FilterProfiles.png)
 
-![Event Command Editor](https://github.com/staxrip/staxrip/blob/master/Images/Screenshots/EventCommands.png)
+![Event Command Editor](https://github.com/m00nxx/StaxRip2/blob/master/Images/Screenshots/EventCommands.png)
 
-![x265 Options](https://github.com/staxrip/staxrip/blob/master/Images/Screenshots/AppsManager.png)
+![x265 Options](https://github.com/m00nxx/StaxRip2/blob/master/Images/Screenshots/AppsManager.png)
 
-![Processing](https://github.com/staxrip/staxrip/blob/master/Images/Screenshots/SettingsGeneral.png)
+![Processing](https://github.com/m00nxx/StaxRip2/blob/master/Images/Screenshots/SettingsGeneral.png)

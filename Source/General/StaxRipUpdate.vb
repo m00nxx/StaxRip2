@@ -57,17 +57,19 @@ Public Class StaxRipUpdate
         If Not (proceed OrElse force) Then Exit Sub
 
         Try
-            'Dim changelogUrl = "https://raw.githubusercontent.com/staxrip/staxrip/master/CHANGELOG.md"
-            Const url = "https://api.github.com/repos/staxrip/staxrip/releases?per_page=5"
+            Const url = "https://api.github.com/repos/m00nxx/StaxRip2/releases?per_page=5"
 
             Dim currentVersion = Assembly.GetEntryAssembly().GetName().Version
 
-            HttpClient.DefaultRequestHeaders.Add("User-Agent", "Release-Checker")
+            If Not HttpClient.DefaultRequestHeaders.UserAgent.ToString().Contains("Release-Checker") Then
+                HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Release-Checker")
+            End If
+
             Dim response = Await HttpClient.GetAsync(url)
             response.EnsureSuccessStatusCode()
             Dim content = Await response.Content.ReadAsStringAsync()
 
-            Dim linkMatches = Regex.Matches(content, "(?<=""browser_download_url"":"")https://github\.com/staxrip/staxrip/releases/download/(?<tag>v\d\.\d+\.\d+(?:\.\d+)?)/StaxRip-v?(?<version>\d+\.\d+\.\d+(?:\.\d+)?)-x64(?<type>-.+?)?\.7z(?="")")
+            Dim linkMatches = Regex.Matches(content, "(?<=""browser_download_url"":"")https://github\.com/m00nxx/StaxRip2/releases/download/(?<tag>v\d\.\d+\.\d+(?:\.\d+)?)/StaxRip2-v?(?<version>\d+\.\d+\.\d+(?:\.\d+)?)-x64(?<type>-.+?)?\.7z(?="")")
             Dim latestVersions = New List(Of (Version As Version, ReleaseType As String, ReleaseUri As String, DownloadUri As String))
 
             For Each linkMatch As Match In linkMatches
@@ -78,7 +80,7 @@ Public Class StaxRipUpdate
                                     If(type = "-EXE", "hotfix/update", "release"))
                 Dim onlineVersionString = linkMatch.Groups("version").Value
                 Dim onlineVersion = Version.Parse(onlineVersionString)
-                Dim releaseUri = $"https://github.com/staxrip/staxrip/releases/tag/{tag}"
+                Dim releaseUri = $"https://github.com/m00nxx/StaxRip2/releases/tag/{tag}"
 
                 If onlineVersion <= currentVersion OrElse (s.CheckForUpdatesDismissed <> "" AndAlso Version.Parse(s.CheckForUpdatesDismissed) >= onlineVersion) Then Continue For
 
@@ -109,7 +111,8 @@ Public Class StaxRipUpdate
             End If
 
             s.CheckForUpdatesLastRequest = DateTime.Now
-        Catch
+        Catch ex As Exception
+            If force Then g.ShowException(ex)
         End Try
     End Sub
 End Class

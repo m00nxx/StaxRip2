@@ -3451,7 +3451,10 @@ Public Class Package
         If Not WasConfLoaded Then
             WasConfLoaded = True
 
-            For Each i In IO.Directory.GetFiles(IO.Path.Combine(Folder.Apps, "Conf"))
+            Dim confFolder = IO.Path.Combine(Folder.Apps, "Conf")
+            If Not IO.Directory.Exists(confFolder) Then Exit Sub
+
+            For Each i As String In IO.Directory.GetFiles(confFolder)
                 If Items.ContainsKey(i.Base) Then
                     Items(i.Base).LoadConf()
                 Else
