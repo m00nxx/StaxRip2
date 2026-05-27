@@ -150,6 +150,12 @@ Assert-Contains $readme "StaxRip2 uses its own settings registry key" "README mu
 Assert-Contains $readme "StaxRip2 is a portable application" "README usage docs must identify the fork."
 Assert-Contains $readme '`StaxRip2.exe`' "README usage docs must use the fork executable name."
 
+$changelog = Read-RepoFile "CHANGELOG.md"
+Assert-Contains $changelog "Fixed command-line template loading" "Changelog must mention the command-line template loading fix."
+Assert-Contains $changelog "AppData fallbacks, mutex names, process checks" "Changelog must mention fork isolation cleanup."
+Assert-Contains $changelog "StaxRip2-Release-x64" "Changelog must mention the GitHub Actions artifact."
+Assert-Contains $changelog "Hardened source filter preference settings and preview JPEG saving" "Changelog must mention the targeted lookup hardening."
+
 $issueTemplateConfig = Read-RepoFile ".github/ISSUE_TEMPLATE/config.yml"
 Assert-Contains $issueTemplateConfig "https://github.com/m00nxx/StaxRip2/discussions/new/choose" "Issue template discussion links must target the fork."
 Assert-Contains $issueTemplateConfig "https://github.com/m00nxx/StaxRip2/blob/master/Docs/README.md" "Issue template documentation links must target the fork."

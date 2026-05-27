@@ -16,6 +16,12 @@ v0.1.0 (2026-05-27)
 - Isolated StaxRip2 settings from original StaxRip settings and quarantined incompatible legacy settings files at startup.
 - Fixed first-run settings initialization so missing settings files do not trigger immediate unsafe serialization.
 - Fixed startup template fallback recursion that could end in a stack overflow.
+- Fixed command-line template loading when template names with spaces are passed without quoting.
+- Further isolated the fork from upstream StaxRip by moving AppData fallbacks, mutex names, process checks, tray text, log names, update prompts, and issue links to StaxRip2-specific identifiers.
+- Added a GitHub Actions Windows app-only build workflow that runs source checks and publishes the `StaxRip2-Release-x64` artifact.
+- Updated build and release helper scripts to package `StaxRip2.exe` and write artifacts under the repository `Artifacts` directory instead of a maintainer-specific release drive.
+- Hardened source filter preference settings and preview JPEG saving against missing lookup results.
+- Updated GitHub Actions dependencies to Node 24 compatible action versions.
 - Preserved the MIT license and original StaxRip attribution.
 
 
