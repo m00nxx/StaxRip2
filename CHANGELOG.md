@@ -12,6 +12,7 @@ v0.1.0 (2026-05-27)
 - Updated in-app help, issue reporting, and update checks to target the StaxRip2 fork.
 - Fixed solution Release configurations so they build Release binaries.
 - Added source regression checks for the fork startup and versioning fixes.
+- Added source build documentation for Visual Studio, Build Tools, and the native FrameServer C++ workload.
 - Preserved the MIT license and original StaxRip attribution.
 
 

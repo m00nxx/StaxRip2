@@ -64,4 +64,14 @@ $mainForm = Read-RepoFile "Source/Forms/MainForm.vb"
 Assert-Contains $mainForm 'https://github.com/m00nxx/StaxRip2' "Help menu must point to the StaxRip2 repository."
 Assert-Contains $mainForm 'https://github.com/m00nxx/StaxRip2/issues/new/choose' "Issue reporting must point to the StaxRip2 repository."
 
+$readme = Read-RepoFile "README.md"
+Assert-Contains $readme "[Building from source](BUILDING.md)" "README must link to source build instructions."
+
+$buildDocs = Read-RepoFile "BUILDING.md"
+Assert-Contains $buildDocs "Microsoft.VisualStudio.Workload.VCTools" "Build docs must list the Build Tools C++ workload."
+Assert-Contains $buildDocs "Microsoft.VisualStudio.Workload.NativeDesktop" "Build docs must list the Visual Studio C++ desktop workload."
+Assert-Contains $buildDocs "Microsoft.Cpp.Default.props" "Build docs must explain the missing C++ props error."
+Assert-Contains $buildDocs "Source/StaxRip.sln" "Build docs must explain full solution builds."
+Assert-Contains $buildDocs "Source/StaxRip.vbproj" "Build docs must explain app-only builds."
+
 Write-Host "Source checks passed."

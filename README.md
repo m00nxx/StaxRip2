@@ -42,6 +42,7 @@ There are a lot of resources in StaxRip-related communities. Users are strongly 
 [![GitHub all releases](https://img.shields.io/github/downloads/m00nxx/StaxRip2/total?style=plastic&logo=GitHub&logoColor=white&label=Total%20Downloads&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2/releases/latest)
 
 - You can find plenty of information and instructions in the [documentation](https://github.com/m00nxx/StaxRip2/tree/master/Docs/README.md).
+- Build requirements and source build commands are documented in [Building from source](BUILDING.md).
 - For the current changelog click here: [Changelog](https://github.com/m00nxx/StaxRip2/blob/master/CHANGELOG.md) - it's worth taking a look at it.
     - Supporters please use the [Changelog for Supporters](https://github.com/m00nxx/StaxRip2/blob/master/CHANGELOG-SUPPORTER.md).
 - To download StaxRip2 browse through all [Releases](https://github.com/m00nxx/StaxRip2/releases) or jump directly to the [Latest Release](https://github.com/m00nxx/StaxRip2/releases/latest).
