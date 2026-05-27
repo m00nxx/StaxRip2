@@ -1,6 +1,16 @@
 ﻿StaxRip2 Changelog
 ==================
 
+v0.1.1 (2026-05-27)
+-------------------
+
+- Added a full local release packaging script for complete StaxRip2 runtime archives.
+- Added package smoke checks for source checks, release staging, archive naming, required runtime assets, and release exclusions.
+- Cleaned up remaining StaxRip2 branding in runtime dialogs, documentation, GitHub issue templates, FrameServer metadata, PowerShell integration, and package help links.
+- Hardened filter profile migration and source filter matching against missing or empty filter lists.
+- Hardened thumbnail image saving when the requested image encoder is unavailable.
+- Documented release packaging requirements, local runtime payload requirements, and compression tuning.
+
 v0.1.0 (2026-05-27)
 -------------------
 

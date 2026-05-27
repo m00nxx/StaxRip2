@@ -95,8 +95,8 @@ Assert-Contains $project "<ProductName>StaxRip2</ProductName>" "Product name mus
 $assemblyInfo = Read-RepoFile "Source/My Project/AssemblyInfo.vb"
 Assert-Contains $assemblyInfo 'AssemblyTitle("StaxRip2")' "Assembly title must identify the fork."
 Assert-Contains $assemblyInfo 'AssemblyProduct("StaxRip2")' "Assembly product must identify the fork."
-Assert-Contains $assemblyInfo 'AssemblyVersion("0.1.0")' "Assembly version must follow the StaxRip2 release line."
-Assert-Contains $assemblyInfo 'AssemblyFileVersion("0.1.0")' "File version must follow the StaxRip2 release line."
+Assert-Contains $assemblyInfo 'AssemblyVersion("0.1.1")' "Assembly version must follow the StaxRip2 release line."
+Assert-Contains $assemblyInfo 'AssemblyFileVersion("0.1.1")' "File version must follow the StaxRip2 release line."
 
 $updateChecker = Read-RepoFile "Source/General/StaxRipUpdate.vb"
 Assert-Contains $updateChecker 'api.github.com/repos/m00nxx/StaxRip2/releases?per_page=5' "Update checks must target the StaxRip2 fork releases."
@@ -180,6 +180,9 @@ Assert-Contains $readme "StaxRip2 is a portable application" "README usage docs 
 Assert-Contains $readme '`StaxRip2.exe`' "README usage docs must use the fork executable name."
 
 $changelog = Read-RepoFile "CHANGELOG.md"
+Assert-Contains $changelog "v0.1.1 (2026-05-27)" "Changelog must include the v0.1.1 release entry."
+Assert-Contains $changelog "full local release packaging" "Changelog must mention v0.1.1 packaging work."
+Assert-Contains $changelog "package smoke checks" "Changelog must mention v0.1.1 smoke checks."
 Assert-Contains $changelog "Fixed command-line template loading" "Changelog must mention the command-line template loading fix."
 Assert-Contains $changelog "AppData fallbacks, mutex names, process checks" "Changelog must mention fork isolation cleanup."
 Assert-Contains $changelog "StaxRip2-Release-x64" "Changelog must mention the GitHub Actions artifact."
@@ -279,5 +282,10 @@ Assert-Contains $smokePackage "Assert-ArchiveDoesNotContain" "Package smoke test
 Assert-Contains $smokePackage "ManagedCuda.xml" "Package smoke test must reject debug XML files."
 Assert-Contains $smokePackage "vs-temp-dl" "Package smoke test must reject temporary download caches."
 Assert-Contains $smokePackage "Start-Sleep -Milliseconds 500" "Package smoke test must tolerate filesystem visibility delay after packaging."
+
+$releaseNotes = Read-RepoFile "RELEASE_NOTES.md"
+Assert-Contains $releaseNotes "# StaxRip2 v0.1.1" "Release notes must identify the v0.1.1 release."
+Assert-Contains $releaseNotes "StaxRip2-v0.1.1-x64.7z" "Release notes must document the full package asset."
+Assert-Contains $releaseNotes "app-only" "Release notes must distinguish CI artifact scope from full packages."
 
 Write-Host "Source checks passed."
