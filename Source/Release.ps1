@@ -7,6 +7,8 @@ param(
     [string] $ArtifactsDirectory = (Join-Path (Split-Path $PSScriptRoot -Parent) "Artifacts"),
     [string] $MSBuildPath = "",
     [string] $SevenZipPath = "",
+    [ValidateRange(0, 9)]
+    [int] $CompressionLevel = 5,
     [switch] $SkipBuild,
     [switch] $SkipArchive,
     [switch] $KeepStaging
@@ -63,6 +65,7 @@ function Resolve-SevenZip {
     if ($command) { return $command.Source }
 
     $candidates = @(
+        (Join-Path $binDirectory "Apps\Support\7zip\7za.exe"),
         "${env:ProgramFiles}\7-Zip\7z.exe",
         "${env:ProgramFiles(x86)}\7-Zip\7z.exe"
     )
@@ -81,6 +84,39 @@ function Assert-RuntimeAssets {
     if (-not (Test-Path (Join-Path $binDirectory 'Fonts'))) { throw "Source/bin/Fonts is missing." }
     if (-not (Test-Path (Join-Path $binDirectory "Fonts\Icons"))) { throw "Source/bin/Fonts/Icons is missing." }
     if (-not (Test-Path (Join-Path $binDirectory "License.txt"))) { throw "Source/bin/License.txt is missing." }
+}
+
+function Wait-FileReady {
+    param([Parameter(Mandatory = $true)][string] $Path)
+
+    $lastLength = -1
+    $stableCount = 0
+
+    for ($attempt = 0; $attempt -lt 120; $attempt++) {
+        if (Test-Path $Path) {
+            try {
+                $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None)
+                $length = $stream.Length
+                $stream.Dispose()
+
+                if ($length -eq $lastLength -and $length -gt 32) {
+                    $stableCount += 1
+                    if ($stableCount -ge 2) { return }
+                }
+                else {
+                    $stableCount = 0
+                    $lastLength = $length
+                }
+            }
+            catch {
+                $stableCount = 0
+            }
+        }
+
+        Start-Sleep -Seconds 1
+    }
+
+    throw "Timed out waiting for '$Path' to become ready."
 }
 
 if (-not $SkipBuild) {
@@ -149,8 +185,15 @@ if (-not $SkipArchive) {
     $sevenZip = Resolve-SevenZip $SevenZipPath
     Push-Location $ArtifactsDirectory
     try {
-        & $sevenZip a -t7z -mx9 -m0=LZMA2 -md1024m -mfb256 -mmt=on "$packageName.7z" $packageName
-        if ($LastExitCode) { throw "7-Zip failed with exit code $LastExitCode." }
+        $stdout = Join-Path $env:TEMP "staxrip2-release-7z-out.txt"
+        $stderr = Join-Path $env:TEMP "staxrip2-release-7z-err.txt"
+        Remove-Item $stdout, $stderr -ErrorAction SilentlyContinue
+        $arguments = "a -t7z -mx$CompressionLevel -m0=LZMA2 -md64m -mfb64 -mmt=on `"$packageName.7z`" `"$packageName`""
+        $process = Start-Process -FilePath $sevenZip -ArgumentList $arguments -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru
+        if (Test-Path $stdout) { Get-Content $stdout | Write-Host }
+        if (Test-Path $stderr) { Get-Content $stderr | Write-Host }
+        if ($process.ExitCode) { throw "7-Zip failed with exit code $($process.ExitCode)." }
+        Wait-FileReady (Join-Path $ArtifactsDirectory "$packageName.7z")
     }
     finally {
         Pop-Location
