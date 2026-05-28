@@ -4,6 +4,16 @@
 Unreleased
 ----------
 
+v0.1.5 (2026-05-28)
+-------------------
+
+- Made tool updates confirm replacement before deleting existing files so cancellation cannot leave a tool directory empty.
+- Added timeouts for console helper process output and drained stdout/stderr asynchronously to avoid external tool deadlocks.
+- Made 32-bit update checks fall back to x64 release assets when no x86 package is published.
+- Added full runtime package validation for key bundled tools, templates, and runtime files.
+- Fixed release packaging so startup templates are included while user settings remain excluded.
+- Updated release notes and build documentation for the v0.1.5 package.
+
 v0.1.4 (2026-05-28)
 -------------------
 

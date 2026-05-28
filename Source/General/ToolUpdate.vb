@@ -157,65 +157,67 @@ Public Class ToolUpdate
             Exit Sub
         End If
 
-        DeleteOldFiles()
+        ReplaceAfterConfirmation()
     End Sub
 
-    Sub DeleteOldFiles()
-        Dim entries = Directory.GetFileSystemEntries(TargetDir)
-        entries = entries.Where(Function(item) Not item.FileName.EqualsAny(Package.Keep)).ToArray
-        Dim names = entries.Select(Function(item) item.FileName)
-        Dim list = String.Join(BR, names)
-        UpdatePackageDialog()
-
-        If MsgQuestion("Delete current files?",
-            "Delete current files in:" + BR2 + TargetDir + BR2 + list) = DialogResult.OK Then
-
-            For Each file In Directory.GetFiles(TargetDir)
-                If file.FileName.EqualsAny(Package.Keep) Then
-                    Continue For
-                End If
-
-                FileHelp.Delete(file, FileIO.RecycleOption.SendToRecycleBin)
-            Next
-
-            For Each folder In Directory.GetDirectories(TargetDir)
-                If folder.FileName.EqualsAny(Package.Keep) Then
-                    Continue For
-                End If
-
-                FolderHelp.Delete(folder, FileIO.RecycleOption.SendToRecycleBin)
-            Next
+    Sub ReplaceAfterConfirmation(Optional deleteExtractDirOnCancel As Boolean = False)
+        If ConfirmReplacement() Then
+            ReplaceFiles()
         Else
             UpdatePackageDialog()
             MsgInfo("Update was canceled.")
-            Exit Sub
+
+            If deleteExtractDirOnCancel Then
+                FolderHelp.Delete(ExtractDir)
+            End If
         End If
+    End Sub
+
+    Function ConfirmReplacement() As Boolean
+        Dim currentEntries = Directory.GetFileSystemEntries(TargetDir).
+            Where(Function(item) Not item.FileName.EqualsAny(Package.Keep)).
+            ToArray()
+        Dim currentList = String.Join(BR, currentEntries.Select(Function(item) item.FileName))
+        Dim newEntries = Directory.GetFileSystemEntries(ExtractDir)
+        Dim newList = String.Join(BR, newEntries.Select(Function(item) item.FileName))
+
+        UpdatePackageDialog()
+
+        Return MsgQuestion("Replace current files?",
+            "Current files in:" + BR2 + TargetDir + BR2 + currentList + BR2 + BR2 +
+            "New files from:" + BR2 + ExtractDir + BR2 + newList) = DialogResult.OK
+    End Function
+
+    Sub ReplaceFiles()
+        For Each file In Directory.GetFiles(TargetDir)
+            If file.FileName.EqualsAny(Package.Keep) Then
+                Continue For
+            End If
+
+            FileHelp.Delete(file, FileIO.RecycleOption.SendToRecycleBin)
+        Next
+
+        For Each folder In Directory.GetDirectories(TargetDir)
+            If folder.FileName.EqualsAny(Package.Keep) Then
+                Continue For
+            End If
+
+            FolderHelp.Delete(folder, FileIO.RecycleOption.SendToRecycleBin)
+        Next
 
         CopyFiles()
     End Sub
 
     Sub CopyFiles()
-        Dim entries = Directory.GetFileSystemEntries(ExtractDir)
-        Dim names = entries.Select(Function(item) item.FileName)
-        Dim list = String.Join(BR, names)
         UpdatePackageDialog()
 
-        If MsgQuestion("Copy new files?",
-            "Copy new files from:" + BR2 + ExtractDir + BR2 + "to:" + BR2 +
-            TargetDir + BR2 + list) = DialogResult.OK Then
+        For Each file In Directory.GetFiles(ExtractDir)
+            FileHelp.Copy(file, Path.Combine(TargetDir, file.FileName))
+        Next
 
-            For Each file In Directory.GetFiles(ExtractDir)
-                FileHelp.Copy(file, Path.Combine(TargetDir, file.FileName))
-            Next
-
-            For Each folder In Directory.GetDirectories(ExtractDir)
-                FolderHelp.Copy(folder, Path.Combine(TargetDir, folder.FileName))
-            Next
-        Else
-            UpdatePackageDialog()
-            MsgInfo("Update was canceled.")
-            Exit Sub
-        End If
+        For Each folder In Directory.GetDirectories(ExtractDir)
+            FolderHelp.Copy(folder, Path.Combine(TargetDir, folder.FileName))
+        Next
 
         FolderHelp.Delete(ExtractDir, FileIO.RecycleOption.SendToRecycleBin)
         EditVersion()

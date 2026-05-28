@@ -13,7 +13,8 @@ param(
     [int] $ArchiveReadyTimeoutSeconds = 300,
     [switch] $SkipBuild,
     [switch] $SkipArchive,
-    [switch] $KeepStaging
+    [switch] $KeepStaging,
+    [switch] $RequireFullRuntime
 )
 
 $ErrorActionPreference = "Stop"
@@ -98,7 +99,28 @@ function Assert-RuntimeAssets {
     if (-not (Test-Path (Join-Path $binDirectory "Apps\Conf"))) { throw "$binDirectory/Apps/Conf is missing." }
     if (-not (Test-Path (Join-Path $binDirectory 'Fonts'))) { throw "$binDirectory/Fonts is missing." }
     if (-not (Test-Path (Join-Path $binDirectory "Fonts\Icons"))) { throw "$binDirectory/Fonts/Icons is missing." }
+    if (-not (Test-Path (Join-Path $binDirectory "Settings\Templates"))) { throw "$binDirectory/Settings/Templates is missing." }
     if (-not (Test-Path (Join-Path $repoRoot "License.txt"))) { throw "License.txt is missing from the repository root." }
+}
+
+function Assert-FullRuntimeAssets {
+    $requiredRuntimeAssets = @(
+        "Apps\Support\7zip\7za.exe",
+        "Apps\Support\MediaInfo.NET\MediaInfo.dll",
+        "Apps\Support\MKVToolNix\mkvmerge.exe",
+        "Apps\FrameServer\VapourSynth\VSPipe.exe",
+        "Apps\Encoders\x265\x265.exe",
+        "Settings\Templates\Automatic Workflow.srip",
+        "Settings\Templates\Manual Workflow.srip",
+        "Settings\Templates\Re-mux.srip"
+    )
+
+    foreach ($relativePath in $requiredRuntimeAssets) {
+        $path = Join-Path $binDirectory $relativePath
+        if (-not (Test-Path $path)) {
+            throw "Required full runtime asset is missing: $relativePath"
+        }
+    }
 }
 
 function Wait-FileReady {
@@ -158,6 +180,9 @@ if (-not $SkipBuild) {
 }
 
 Assert-RuntimeAssets
+if ($RequireFullRuntime) {
+    Assert-FullRuntimeAssets
+}
 
 $version = [Reflection.AssemblyName]::GetAssemblyName($appExe).Version.ToString(3)
 $packageName = "StaxRip2-v$version-$Platform"
@@ -169,7 +194,7 @@ if (Test-Path $archivePath) { Remove-Item $archivePath -Force }
 New-Item -ItemType Directory -Path $targetDirectory -Force | Out-Null
 
 $excludeRelativePatterns = @(
-    "^Settings($|[\\/])",
+    "^Settings[\\/](?!Templates([\\/]|$)).*",
     ".*\.log$",
     ".*\.pdb$",
     ".*recovery\.srip$",

@@ -7,6 +7,6 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyCopyright("Copyright (C) 2002-2026 StaxRip Authors; StaxRip2 modifications Copyright (C) 2026 StaxRip2 Contributors")>
 <Assembly: ComVisible(False)> 
 <Assembly: Guid("54d5dc0f-6ba7-42f0-a82f-9c71d561cb8b")>
-<Assembly: AssemblyVersion("0.1.4")>
-<Assembly: AssemblyFileVersion("0.1.4")>
+<Assembly: AssemblyVersion("0.1.5")>
+<Assembly: AssemblyFileVersion("0.1.5")>
 <Assembly: AssemblyDescription("Video encoding app")>

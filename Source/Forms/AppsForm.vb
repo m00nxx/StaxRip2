@@ -730,8 +730,7 @@ Public Class AppsForm
                                     FileHelp.Copy(i, Path.Combine(ToolUpdate.ExtractDir, i.FileName))
                                 Next
 
-                                ToolUpdate.DeleteOldFiles()
-                                FolderHelp.Delete(ToolUpdate.ExtractDir)
+                                ToolUpdate.ReplaceAfterConfirmation(True)
                             End If
                         End If
                     End Sub)

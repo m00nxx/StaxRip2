@@ -43,10 +43,13 @@ jobs:
         shell: pwsh
         run: |
           & "${{ steps.msbuild.outputs.path }}" Source\StaxRip.vbproj /t:Build /p:Configuration=Release /p:Platform=x64 /m /v:minimal
+          & "${{ steps.msbuild.outputs.path }}" Source\StaxRip.vbproj /t:Build /p:Configuration=Release /p:Platform=x86 /m /v:minimal
 
       - name: Smoke package staging
         shell: pwsh
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File Tests\SmokePackage.ps1 -SkipBuild -SkipArchive -UseMinimalRuntimeFixture -ArtifactsDirectory $env:RUNNER_TEMP\StaxRip2Smoke
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File Tests\SmokePackage.ps1 -Platform x64 -SkipBuild -SkipArchive -UseMinimalRuntimeFixture -ArtifactsDirectory $env:RUNNER_TEMP\StaxRip2SmokeX64
+          powershell -NoProfile -ExecutionPolicy Bypass -File Tests\SmokePackage.ps1 -Platform x86 -SkipBuild -SkipArchive -UseMinimalRuntimeFixture -ArtifactsDirectory $env:RUNNER_TEMP\StaxRip2SmokeX86
 
       - name: Collect artifact
         id: artifact

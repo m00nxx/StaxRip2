@@ -97,8 +97,14 @@ Before publishing a package, run the package smoke checks:
 powershell -NoProfile -ExecutionPolicy Bypass -File Tests/SmokePackage.ps1 -Platform x64 -CompressionLevel 5
 ```
 
+For a publishable full runtime package, include the stricter runtime asset checks:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Tests/SmokePackage.ps1 -Platform x64 -CompressionLevel 5 -RequireFullRuntime
+```
+
 Use `-CompressionLevel 0..9` if you need to trade package size for packaging speed. The default is `5`.
 
-For `v0.1.4`, the release archive is expected to be named `StaxRip2-v0.1.4-x64.7z`.
+For `v0.1.5`, the release archive is expected to be named `StaxRip2-v0.1.5-x64.7z`.
 
 The GitHub Actions workflow intentionally publishes only an app-only artifact. Full release packaging is local until the runtime payload is made reproducible from a clean checkout.

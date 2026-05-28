@@ -7,6 +7,7 @@ Imports System.Reflection
 Imports System.Runtime.Serialization.Formatters.Binary
 Imports System.Text
 Imports System.Threading
+Imports System.Threading.Tasks
 
 Imports Microsoft.VisualBasic.FileIO
 
@@ -192,8 +193,10 @@ Public Class FileHelp
 End Class
 
 Public Class ProcessHelp
-    Shared Function GetConsoleOutput(file As String, arguments As String, Optional stderr As Boolean = False) As String
-        Dim ret As String
+    Public Const DefaultConsoleOutputTimeoutMilliseconds As Integer = 10 * 60 * 1000
+
+    Shared Function GetConsoleOutput(file As String, arguments As String, Optional stderr As Boolean = False, Optional timeoutMilliseconds As Integer = DefaultConsoleOutputTimeoutMilliseconds) As String
+        Dim ret = ""
 
         Using proc As New Process
             proc.StartInfo.UseShellExecute = False
@@ -201,18 +204,25 @@ Public Class ProcessHelp
             proc.StartInfo.FileName = file
             proc.StartInfo.WorkingDirectory = file.Dir
             proc.StartInfo.Arguments = arguments
+            proc.StartInfo.RedirectStandardOutput = True
+            proc.StartInfo.RedirectStandardError = True
 
-            If stderr Then
-                proc.StartInfo.RedirectStandardError = True
-                proc.Start()
-                ret = proc.StandardError.ReadToEnd()
-            Else
-                proc.StartInfo.RedirectStandardOutput = True
-                proc.Start()
-                ret = proc.StandardOutput.ReadToEnd()
+            proc.Start()
+            Dim stdoutTask = proc.StandardOutput.ReadToEndAsync()
+            Dim stderrTask = proc.StandardError.ReadToEndAsync()
+
+            If Not proc.WaitForExit(timeoutMilliseconds) Then
+                Try
+                    proc.Kill()
+                Catch
+                End Try
+
+                Throw New TimeoutException($"Process timed out after {timeoutMilliseconds} ms: {file} {arguments}")
             End If
 
             proc.WaitForExit()
+            Task.WaitAll(New Task() {stdoutTask, stderrTask})
+            ret = If(stderr, stderrTask.Result, stdoutTask.Result)
         End Using
 
         Return If(ret, "")

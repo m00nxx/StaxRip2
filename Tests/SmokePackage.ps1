@@ -11,7 +11,8 @@ param(
     [switch] $SkipBuild,
     [switch] $SkipArchive,
     [switch] $KeepStaging,
-    [switch] $UseMinimalRuntimeFixture
+    [switch] $UseMinimalRuntimeFixture,
+    [switch] $RequireFullRuntime
 )
 
 $ErrorActionPreference = "Stop"
@@ -46,9 +47,22 @@ $powershellExe = Resolve-PowerShell
 function Initialize-MinimalRuntimeFixture {
     foreach ($path in @(
         (Join-Path $binDirectory "Apps\Conf"),
-        (Join-Path $binDirectory "Fonts\Icons")
+        (Join-Path $binDirectory "Fonts\Icons"),
+        (Join-Path $binDirectory "Settings\Templates")
     )) {
         New-Item -ItemType Directory -Path $path -Force | Out-Null
+    }
+
+    foreach ($templateName in @("Automatic Workflow.srip", "Manual Workflow.srip", "Re-mux.srip")) {
+        $targetTemplate = Join-Path $binDirectory "Settings\Templates\$templateName"
+        $sourceTemplate = Join-Path (Get-BinDirectory "x64") "Settings\Templates\$templateName"
+
+        if ((Test-Path $sourceTemplate) -and -not ($sourceTemplate -ieq $targetTemplate)) {
+            Copy-Item -LiteralPath $sourceTemplate -Destination $targetTemplate -Force
+        }
+        elseif (-not (Test-Path $targetTemplate)) {
+            Set-Content -LiteralPath $targetTemplate -Value "Minimal runtime fixture template."
+        }
     }
 }
 
@@ -265,6 +279,40 @@ function Assert-ArchiveDoesNotContain {
     }
 }
 
+function Assert-FullRuntimeStaging {
+    param([Parameter(Mandatory = $true)][string] $Directory)
+
+    foreach ($relativePath in @(
+        "Apps\Support\7zip\7za.exe",
+        "Apps\Support\MediaInfo.NET\MediaInfo.dll",
+        "Apps\Support\MKVToolNix\mkvmerge.exe",
+        "Apps\FrameServer\VapourSynth\VSPipe.exe",
+        "Apps\Encoders\x265\x265.exe",
+        "Settings\Templates\Automatic Workflow.srip",
+        "Settings\Templates\Manual Workflow.srip",
+        "Settings\Templates\Re-mux.srip"
+    )) {
+        Assert-PathExists (Join-Path $Directory $relativePath) "Full runtime asset is missing from staging: $relativePath"
+    }
+}
+
+function Assert-FullRuntimeArchive {
+    param([Parameter(Mandatory = $true)][string[]] $Listing)
+
+    foreach ($pattern in @(
+        "Apps[\\/]Support[\\/]7zip[\\/]7za\.exe$",
+        "Apps[\\/]Support[\\/]MediaInfo\.NET[\\/]MediaInfo\.dll$",
+        "Apps[\\/]Support[\\/]MKVToolNix[\\/]mkvmerge\.exe$",
+        "Apps[\\/]FrameServer[\\/]VapourSynth[\\/]VSPipe\.exe$",
+        "Apps[\\/]Encoders[\\/]x265[\\/]x265\.exe$",
+        "Settings[\\/]Templates[\\/]Automatic Workflow\.srip$",
+        "Settings[\\/]Templates[\\/]Manual Workflow\.srip$",
+        "Settings[\\/]Templates[\\/]Re-mux\.srip$"
+    )) {
+        Assert-ArchiveContains $Listing $pattern "Full runtime asset is missing from archive: $pattern"
+    }
+}
+
 & $powershellExe -NoProfile -ExecutionPolicy Bypass -File $sourceChecks
 
 if ($UseMinimalRuntimeFixture) {
@@ -296,6 +344,9 @@ if ($SkipArchive) {
 if ($KeepStaging) {
     $releaseArgs += "-KeepStaging"
 }
+if ($RequireFullRuntime) {
+    $releaseArgs += "-RequireFullRuntime"
+}
 
 & $powershellExe @releaseArgs
 if ($LastExitCode) {
@@ -319,9 +370,12 @@ if ($SkipArchive) {
     Assert-PathExists (Join-Path $stagingDirectory "License.txt") "License.txt is missing from the package."
     Assert-PathExists (Join-Path $stagingDirectory "Apps\Conf") "Apps\Conf is missing from the package."
     Assert-PathExists (Join-Path $stagingDirectory "Fonts\Icons") "Fonts\Icons is missing from the package."
-    Assert-PathMissing (Join-Path $stagingDirectory "Settings") "Settings must not be included in the package."
+    Assert-PathExists (Join-Path $stagingDirectory "Settings\Templates") "Settings templates are missing from the package."
     Assert-PathMissing (Join-Path $stagingDirectory "ManagedCuda.xml") "ManagedCuda.xml must not be included in the package."
     Assert-PathMissing (Join-Path $stagingDirectory "System.Management.Automation.xml") "System.Management.Automation.xml must not be included in the package."
+    if ($RequireFullRuntime) {
+        Assert-FullRuntimeStaging $stagingDirectory
+    }
 }
 else {
     Assert-PathExists $archivePath "Release archive was not created."
@@ -334,11 +388,15 @@ else {
     Assert-ArchiveContains $listing "License\.txt$" "License.txt is missing from the archive."
     Assert-ArchiveContains $listing "Apps[\\/]Conf" "Apps\Conf is missing from the archive."
     Assert-ArchiveContains $listing "Fonts[\\/]Icons" "Fonts\Icons is missing from the archive."
-    Assert-ArchiveDoesNotContain $listing "Settings[\\/]" "Settings must not be included in the archive."
+    Assert-ArchiveContains $listing "Settings[\\/]Templates[\\/]" "Settings templates are missing from the archive."
+    Assert-ArchiveDoesNotContain $listing "Settings[\\/](?!Templates($|[\\/]))" "User settings must not be included in the archive."
     Assert-ArchiveDoesNotContain $listing "\.pdb$" "PDB files must not be included in the archive."
     Assert-ArchiveDoesNotContain $listing "ManagedCuda\.xml$" "ManagedCuda.xml must not be included in the archive."
     Assert-ArchiveDoesNotContain $listing "System\.Management\.Automation\.xml$" "System.Management.Automation.xml must not be included in the archive."
     Assert-ArchiveDoesNotContain $listing "vs-temp-dl" "Temporary VapourSynth download caches must not be included in the archive."
+    if ($RequireFullRuntime) {
+        Assert-FullRuntimeArchive $listing
+    }
 }
 
 Write-Host "Package smoke checks passed for $packageName."
