@@ -1,5 +1,5 @@
 name: ❓ Ask a question
-description: Ask a question about StaxRip
+description: Ask a question about StaxRip2
 body:
   - type: textarea
     id: question

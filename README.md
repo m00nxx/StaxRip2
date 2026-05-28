@@ -19,9 +19,6 @@ Settings note: StaxRip2 uses its own settings registry key and does not reuse th
 [![GitHub all releases](https://img.shields.io/github/downloads/m00nxx/StaxRip2/total?style=plastic&logo=GitHub&logoColor=white&label=Total%20Downloads&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2/releases/latest)
 [![GitHub Repo stars](https://img.shields.io/github/stars/m00nxx/StaxRip2?style=plastic&logo=GitHub&logoColor=white&label=Stars&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2)
 [![Discord](https://img.shields.io/badge/Discord-Join%20us?style=plastic&logo=discord&logoColor=white&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://discord.gg/uz8pVR79Bd)  
-[![Static Badge](https://img.shields.io/badge/Patreon-F16061?style=plastic&logo=Patreon&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://www.patreon.com/Dendraspis)
-[![Static Badge](https://img.shields.io/badge/Ko--fi-F16061?style=plastic&logo=Ko-Fi&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://ko-fi.com/Dendraspis)
-[![Static Badge](https://img.shields.io/badge/BuyMeACoffee-BuyMeACoffee?style=plastic&logo=BuyMeACoffee&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://www.buymeacoffee.com/Dendraspis)
 
 -------------
 
@@ -53,18 +50,11 @@ There are a lot of resources in StaxRip-related communities. Users are strongly 
 
 [![GitHub License](https://img.shields.io/github/license/m00nxx/StaxRip2?style=plastic&logo=GitHub&logoColor=white&label=License&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2/blob/master/License.txt)
 [![Discord](https://img.shields.io/badge/Discord-Join%20us?style=plastic&logo=discord&logoColor=white&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://discord.gg/uz8pVR79Bd)  
-[![Static Badge](https://img.shields.io/badge/Patreon-F16061?style=plastic&logo=Patreon&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://www.patreon.com/Dendraspis)
-[![Static Badge](https://img.shields.io/badge/Ko--fi-F16061?style=plastic&logo=Ko-Fi&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://ko-fi.com/Dendraspis)
-[![Static Badge](https://img.shields.io/badge/BuyMeACoffee-BuyMeACoffee?style=plastic&logo=BuyMeACoffee&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://www.buymeacoffee.com/Dendraspis)
 
 StaxRip2 is free to use under the MIT license. If you want to contribute, you can report issues or open pull requests for bug fixes and extensions.
 
 ### **Donation**
-If you want to support the original StaxRip project, you can do it by using those links:
-
-- [![Static Badge](https://img.shields.io/badge/Patreon-F16061?style=plastic&logo=Patreon&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://www.patreon.com/Dendraspis) https://www.patreon.com/Dendraspis
-- [![Static Badge](https://img.shields.io/badge/Ko--fi-F16061?style=plastic&logo=Ko-Fi&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://ko-fi.com/dendraspis) https://ko-fi.com/Dendraspis
-- [![Static Badge](https://img.shields.io/badge/BuyMeACoffee-BuyMeACoffee?style=plastic&logo=BuyMeACoffee&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(210%2C%2060%25%2C%2050%25))](https://www.buymeacoffee.com/dendraspis) https://www.buymeacoffee.com/Dendraspis
+StaxRip2 does not currently publish project-specific donation links. If you want to support the upstream StaxRip ecosystem, use the official upstream project pages so attribution stays clear.
 
 Any contribution is highly appreciated! 
 

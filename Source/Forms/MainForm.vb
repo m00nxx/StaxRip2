@@ -3509,12 +3509,21 @@ Partial Public Class MainForm
         ExtractDolbyVisionMetadata(proj)
     End Sub
 
-    Sub ExtractHdr10PlusMetadata(proj As Project)
-        If proj Is Nothing Then Return
-        If String.IsNullOrWhiteSpace(proj.SourceFile) Then Return
-        If Not File.Exists(proj.SourceFile) Then Return
+    Private Function GetExistingHdrSourcePaths(proj As Project) As String()
+        If proj Is Nothing Then Return New String() {}
 
         Dim sourcePaths = {proj.SourceFile, proj.FirstOriginalSourceFile, proj.LastOriginalSourceFile}
+
+        Return sourcePaths _
+            .Where(Function(path) Not String.IsNullOrWhiteSpace(path)) _
+            .Distinct(StringComparer.OrdinalIgnoreCase) _
+            .Where(Function(path) File.Exists(path)) _
+            .ToArray()
+    End Function
+
+    Sub ExtractHdr10PlusMetadata(proj As Project)
+        Dim sourcePaths = GetExistingHdrSourcePaths(proj)
+        If sourcePaths.Length = 0 Then Return
 
         For Each sourcePath As String In sourcePaths
             Dim mi = New MediaInfo(sourcePath)
@@ -3573,11 +3582,8 @@ Partial Public Class MainForm
     End Sub
 
     Sub ExtractDolbyVisionMetadata(proj As Project)
-        If proj Is Nothing Then Return
-        If String.IsNullOrWhiteSpace(proj.SourceFile) Then Return
-        If Not File.Exists(proj.SourceFile) Then Return
-
-        Dim sourcePaths = {proj.SourceFile, proj.FirstOriginalSourceFile, proj.LastOriginalSourceFile}
+        Dim sourcePaths = GetExistingHdrSourcePaths(proj)
+        If sourcePaths.Length = 0 Then Return
 
         For Each sourcePath As String In sourcePaths
             Dim isEL = False
@@ -3672,6 +3678,7 @@ Partial Public Class MainForm
     Async Function FindHdrMetadataAsync(proj As Project) As Task(Of (jsonFile As String, rpuFile As String))
         If proj Is Nothing Then Return Nothing
         If String.IsNullOrWhiteSpace(proj.SourceFile) Then Return Nothing
+        If Not File.Exists(proj.SourceFile) Then Return Nothing
 
         Dim sourcePath = proj.SourceFile
         Dim jsonFile = ""

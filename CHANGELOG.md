@@ -4,6 +4,18 @@
 Unreleased
 ----------
 
+v0.1.3 (2026-05-28)
+-------------------
+
+- Fixed x86 release packaging so `-Platform x86` uses the `Source/bin-x86` runtime tree instead of packaging x64 output under an x86 archive name.
+- Narrowed binary serialization type binding with explicit allowed type names and type-name prefixes in addition to assembly allow-listing.
+- Added CI package smoke coverage for release staging with a minimal runtime fixture.
+- Hardened package smoke checks with platform-specific bin selection, PowerShell discovery, and executable architecture validation.
+- Hardened HDR metadata discovery by skipping empty or missing source paths before MediaInfo and directory scans.
+- Hardened tool update download parsing with URI-based relative URL resolution and a clear no-downloadable-asset message.
+- Removed confusing fork funding links and disabled the obsolete legacy upstream updater script.
+- Updated release notes, build docs, issue templates, and inherited documentation notices for the StaxRip2 fork.
+
 v0.1.2 (2026-05-28)
 -------------------
 

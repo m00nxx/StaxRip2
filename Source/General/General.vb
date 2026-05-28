@@ -425,18 +425,88 @@ Public Class SafeSerialization
             "ManagedCuda"
         }
 
+        Private Shared ReadOnly AllowedTypeNames As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase) From {
+            "Microsoft.VisualBasic.Collection",
+            "StaxRip.SafeSerialization+FieldContainer",
+            "System.Boolean",
+            "System.Byte",
+            "System.Char",
+            "System.DateTime",
+            "System.Decimal",
+            "System.Double",
+            "System.Guid",
+            "System.Int16",
+            "System.Int32",
+            "System.Int64",
+            "System.Object",
+            "System.SByte",
+            "System.Single",
+            "System.String",
+            "System.TimeSpan",
+            "System.UInt16",
+            "System.UInt32",
+            "System.UInt64",
+            "System.Version",
+            "System.Drawing.Color",
+            "System.Drawing.ContentAlignment",
+            "System.Drawing.FontStyle",
+            "System.Drawing.GraphicsUnit",
+            "System.Drawing.Padding",
+            "System.Drawing.Point",
+            "System.Drawing.Rectangle",
+            "System.Drawing.Size",
+            "System.Windows.Forms.DialogResult",
+            "System.Windows.Forms.FormWindowState",
+            "System.Windows.Forms.HorizontalAlignment",
+            "System.Windows.Forms.Keys",
+            "System.Windows.Forms.Shortcut",
+            "System.Windows.Forms.SortOrder",
+            "System.Windows.Forms.View"
+        }
+
+        Private Shared ReadOnly AllowedTypeNamePrefixes As String() = {
+            "MediaInfoDotNet.",
+            "Microsoft.VisualBasic.",
+            "Newtonsoft.Json.",
+            "StaxRip.",
+            "StaxRip2.",
+            "System.Array",
+            "System.Collections.",
+            "System.Collections.Generic.",
+            "System.Nullable",
+            "System.Tuple",
+            "System.ValueTuple"
+        }
+
         Public Overrides Function BindToType(assemblyName As String, typeName As String) As Type
             Dim simpleAssemblyName = New AssemblyName(assemblyName).Name
+            Dim assemblyIsAllowed = AllowedAssemblyNames.Contains(simpleAssemblyName)
 
-            If Not AllowedAssemblyNames.Contains(simpleAssemblyName) Then
+            If Not assemblyIsAllowed Then
                 Throw New SerializationException($"Type '{typeName}' from assembly '{simpleAssemblyName}' is not allowed in StaxRip2 serialized data.")
             End If
 
-            If simpleAssemblyName.Equals("StaxRip", StringComparison.OrdinalIgnoreCase) Then
+            If Not IsAllowedTypeName(typeName) Then
+                Throw New SerializationException($"Type '{typeName}' is not allowed in StaxRip2 serialized data.")
+            End If
+
+            If simpleAssemblyName.Equals("StaxRip", StringComparison.OrdinalIgnoreCase) OrElse
+                simpleAssemblyName.Equals("StaxRip2", StringComparison.OrdinalIgnoreCase) Then
                 assemblyName = Assembly.GetExecutingAssembly().FullName
             End If
 
             Return Type.GetType($"{typeName}, {assemblyName}", True)
+        End Function
+
+        Private Shared Function IsAllowedTypeName(typeName As String) As Boolean
+            If String.IsNullOrWhiteSpace(typeName) Then Return False
+
+            Dim normalized = Regex.Replace(typeName, "\[\[.*\]\]", "")
+            normalized = normalized.Replace("[]", "")
+
+            If AllowedTypeNames.Contains(normalized) Then Return True
+
+            Return AllowedTypeNamePrefixes.Any(Function(prefix) normalized.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
         End Function
     End Class
 

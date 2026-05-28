@@ -29,25 +29,38 @@ Public Class ToolUpdate
     Async Function UpdateAsync() As Task
         Try
             Dim content = Await HttpClient.GetStringAsync(Package.DownloadURL)
-            Dim matches = Regex.Matches(content, "href=(""|')[^ ]+\.(7z|zip|exe)(""|')")
+            Dim matches = Regex.Matches(content, "(?i)(?:href=(""|')(?<url>[^""']+\.(?:7z|zip|exe)(?:\?[^""']*)?)(?:\1)|(?<url>https?://[^\s""'<>]+?\.(?:7z|zip|exe)(?:\?[^\s""'<>]*)?))")
+            Dim baseUri As Uri = Nothing
+            Uri.TryCreate(Package.DownloadURL, UriKind.Absolute, baseUri)
+            Dim foundDownload = False
 
             For Each match As Match In matches
-                Dim url = match.Value
+                Dim url = match.Groups("url").Value
 
+                If String.IsNullOrWhiteSpace(url) Then Continue For
                 If Ignore(url) Then Continue For
                 If Package.Include <> "" AndAlso Not url.Contains(Package.Include) Then Continue For
 
-                url = url.Substring(6, url.Length - 7)
-
-                If Not url.StartsWith("http") Then
-                    Dim match2 = Regex.Match(Package.DownloadURL, "https?://[^/]+")
-                    url = match2.Value + If(url.StartsWith("/"), "", "/") + url
+                Dim downloadUri As Uri = Nothing
+                If Not Uri.TryCreate(url, UriKind.Absolute, downloadUri) Then
+                    If baseUri Is Nothing OrElse Not Uri.TryCreate(baseUri, url, downloadUri) Then
+                        Continue For
+                    End If
                 End If
 
-                DownloadFile = IO.Path.Combine(Folder.Desktop, IO.Path.GetFileName(url))
-                Download(url)
+                Dim fileName = IO.Path.GetFileName(downloadUri.LocalPath)
+                If String.IsNullOrWhiteSpace(fileName) Then Continue For
+
+                DownloadFile = IO.Path.Combine(Folder.Desktop, fileName)
+                foundDownload = True
+                Download(downloadUri.ToString())
                 Exit For
             Next
+
+            If Not foundDownload Then
+                UpdatePackageDialog()
+                MsgInfo("No downloadable update asset was found." + BR2 + Package.DownloadURL)
+            End If
         Catch ex As Exception
             UpdatePackageDialog()
             MsgError("Tool update failed." + BR2 + ex.Message)

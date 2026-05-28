@@ -44,6 +44,10 @@ jobs:
         run: |
           & "${{ steps.msbuild.outputs.path }}" Source\StaxRip.vbproj /t:Build /p:Configuration=Release /p:Platform=x64 /m /v:minimal
 
+      - name: Smoke package staging
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File Tests\SmokePackage.ps1 -SkipBuild -SkipArchive -UseMinimalRuntimeFixture -ArtifactsDirectory $env:RUNNER_TEMP\StaxRip2Smoke
+
       - name: Collect artifact
         id: artifact
         shell: pwsh

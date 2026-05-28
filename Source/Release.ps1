@@ -21,7 +21,18 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $solution = Join-Path $PSScriptRoot "StaxRip.sln"
 $project = Join-Path $PSScriptRoot "StaxRip.vbproj" # Source/StaxRip.vbproj
-$binDirectory = Join-Path $PSScriptRoot "bin"
+
+function Get-BinDirectory {
+    param([ValidateSet("x64", "x86")][string] $TargetPlatform)
+
+    if ($TargetPlatform -eq "x86") {
+        return Join-Path $PSScriptRoot "bin-x86"
+    }
+
+    return Join-Path $PSScriptRoot "bin"
+}
+
+$binDirectory = Get-BinDirectory $Platform
 $appExe = Join-Path $binDirectory "StaxRip2.exe"
 
 function Resolve-MSBuild {
@@ -80,12 +91,12 @@ function Resolve-SevenZip {
 }
 
 function Assert-RuntimeAssets {
-    if (-not (Test-Path (Join-Path $binDirectory "StaxRip2.exe"))) { throw "StaxRip2.exe is missing from Source/bin." }
-    if (-not (Test-Path (Join-Path $binDirectory 'Apps'))) { throw "Source/bin/Apps is missing." }
-    if (-not (Test-Path (Join-Path $binDirectory "Apps\Conf"))) { throw "Source/bin/Apps/Conf is missing." }
-    if (-not (Test-Path (Join-Path $binDirectory 'Fonts'))) { throw "Source/bin/Fonts is missing." }
-    if (-not (Test-Path (Join-Path $binDirectory "Fonts\Icons"))) { throw "Source/bin/Fonts/Icons is missing." }
-    if (-not (Test-Path (Join-Path $binDirectory "License.txt"))) { throw "Source/bin/License.txt is missing." }
+    if (-not (Test-Path (Join-Path $binDirectory "StaxRip2.exe"))) { throw "StaxRip2.exe is missing from $binDirectory." }
+    if (-not (Test-Path (Join-Path $binDirectory 'Apps'))) { throw "$binDirectory/Apps is missing." }
+    if (-not (Test-Path (Join-Path $binDirectory "Apps\Conf"))) { throw "$binDirectory/Apps/Conf is missing." }
+    if (-not (Test-Path (Join-Path $binDirectory 'Fonts'))) { throw "$binDirectory/Fonts is missing." }
+    if (-not (Test-Path (Join-Path $binDirectory "Fonts\Icons"))) { throw "$binDirectory/Fonts/Icons is missing." }
+    if (-not (Test-Path (Join-Path $repoRoot "License.txt"))) { throw "License.txt is missing from the repository root." }
 }
 
 function Wait-FileReady {

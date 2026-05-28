@@ -10,7 +10,8 @@ param(
     [int] $ArchiveReadyTimeoutSeconds = 300,
     [switch] $SkipBuild,
     [switch] $SkipArchive,
-    [switch] $KeepStaging
+    [switch] $KeepStaging,
+    [switch] $UseMinimalRuntimeFixture
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,8 +19,71 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $sourceChecks = Join-Path $repoRoot "Tests\SourceChecks.ps1"
 $releaseScript = Join-Path $repoRoot "Source\Release.ps1"
-$appExe = Join-Path $repoRoot "Source\bin\StaxRip2.exe"
-$powershellExe = Join-Path $PSHOME "powershell.exe"
+
+function Get-BinDirectory {
+    param([ValidateSet("x64", "x86")][string] $TargetPlatform)
+
+    if ($TargetPlatform -eq "x86") {
+        return Join-Path $repoRoot "Source\bin-x86"
+    }
+
+    return Join-Path $repoRoot "Source\bin"
+}
+
+function Resolve-PowerShell {
+    foreach ($commandName in @("powershell.exe", "pwsh.exe", "pwsh")) {
+        $command = Get-Command $commandName -ErrorAction SilentlyContinue
+        if ($command) { return $command.Source }
+    }
+
+    throw "PowerShell was not found."
+}
+
+$binDirectory = Get-BinDirectory $Platform
+$appExe = Join-Path $binDirectory "StaxRip2.exe"
+$powershellExe = Resolve-PowerShell
+
+function Initialize-MinimalRuntimeFixture {
+    foreach ($path in @(
+        (Join-Path $binDirectory "Apps\Conf"),
+        (Join-Path $binDirectory "Fonts\Icons")
+    )) {
+        New-Item -ItemType Directory -Path $path -Force | Out-Null
+    }
+}
+
+function Get-PEMachine {
+    param([Parameter(Mandatory = $true)][string] $Path)
+
+    $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)
+    try {
+        $reader = New-Object System.IO.BinaryReader -ArgumentList $stream
+        if ($reader.ReadUInt16() -ne 0x5A4D) { throw "$Path is not a PE executable." }
+        $stream.Seek(0x3C, [IO.SeekOrigin]::Begin) | Out-Null
+        $peOffset = $reader.ReadInt32()
+        $stream.Seek($peOffset, [IO.SeekOrigin]::Begin) | Out-Null
+        if ($reader.ReadUInt32() -ne 0x4550) { throw "$Path has an invalid PE header." }
+        return $reader.ReadUInt16()
+    }
+    finally {
+        if ($reader) { $reader.Dispose() }
+        $stream.Dispose()
+    }
+}
+
+function Assert-ExecutableArchitecture {
+    param(
+        [Parameter(Mandatory = $true)][string] $Path,
+        [ValidateSet("x64", "x86")][string] $ExpectedPlatform
+    )
+
+    $machine = Get-PEMachine $Path
+    $expectedMachine = if ($ExpectedPlatform -eq "x64") { 0x8664 } else { 0x014c }
+
+    if ($machine -ne $expectedMachine) {
+        throw "$Path has PE machine 0x$($machine.ToString('x4')), expected $ExpectedPlatform."
+    }
+}
 
 function Assert-PathExists {
     param(
@@ -114,6 +178,10 @@ function Assert-ArchiveDoesNotContain {
 
 & $powershellExe -NoProfile -ExecutionPolicy Bypass -File $sourceChecks
 
+if ($UseMinimalRuntimeFixture) {
+    Initialize-MinimalRuntimeFixture
+}
+
 $releaseArgs = @(
     "-NoProfile",
     "-ExecutionPolicy", "Bypass",
@@ -145,6 +213,8 @@ if ($LastExitCode) {
     throw "Release packaging failed with exit code $LastExitCode."
 }
 
+Assert-ExecutableArchitecture $appExe $Platform
+
 $expectedVersion = [Reflection.AssemblyName]::GetAssemblyName($appExe).Version.ToString(3)
 $packageName = "StaxRip2-v$expectedVersion-$Platform"
 $stagingDirectory = Join-Path $ArtifactsDirectory $packageName
@@ -153,6 +223,7 @@ $archivePath = Join-Path $ArtifactsDirectory "$packageName.7z"
 if ($SkipArchive) {
     Assert-PathExists $stagingDirectory "Staging directory was not created."
     Assert-PathExists (Join-Path $stagingDirectory "StaxRip2.exe") "StaxRip2.exe is missing from the package."
+    Assert-ExecutableArchitecture (Join-Path $stagingDirectory "StaxRip2.exe") $Platform
     Assert-PathExists (Join-Path $stagingDirectory "StaxRip2.exe.config") "StaxRip2.exe.config is missing from the package."
     Assert-PathExists (Join-Path $stagingDirectory "README.md") "README.md is missing from the package."
     Assert-PathExists (Join-Path $stagingDirectory "CHANGELOG.md") "CHANGELOG.md is missing from the package."
