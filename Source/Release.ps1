@@ -140,7 +140,7 @@ function Join-Argument {
 if (-not $SkipBuild) {
     $msbuild = Resolve-MSBuild $MSBuildPath
     $buildTarget = If ($BuildScope -eq "Solution") { $solution } Else { $project }
-    & $msbuild $buildTarget /t:Build /p:Configuration=$Configuration /p:Platform=$Platform /m /v:minimal
+    & $msbuild $buildTarget /t:Rebuild /p:Configuration=$Configuration /p:Platform=$Platform /m /v:minimal
     if ($LastExitCode) { throw "MSBuild failed with exit code $LastExitCode." }
 }
 

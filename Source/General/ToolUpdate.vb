@@ -1,6 +1,7 @@
 ﻿
 Imports System.Net.Http
 Imports System.Text.RegularExpressions
+Imports System.Threading.Tasks
 
 Imports Microsoft.VisualBasic
 Imports StaxRip.UI

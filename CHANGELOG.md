@@ -4,6 +4,9 @@
 Unreleased
 ----------
 
+v0.1.2 (2026-05-28)
+-------------------
+
 - Hardened binary serialization through a centralized formatter factory with an allow-list binder.
 - Fixed mutex handling for settings, profile, and event serialization so acquired mutexes are always released.
 - Fixed update release detection for multi-digit StaxRip2 version components.
