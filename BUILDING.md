@@ -99,6 +99,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File Tests/SmokePackage.ps1 -Plat
 
 Use `-CompressionLevel 0..9` if you need to trade package size for packaging speed. The default is `5`.
 
-For `v0.1.3`, the release archive is expected to be named `StaxRip2-v0.1.3-x64.7z`.
+For `v0.1.4`, the release archive is expected to be named `StaxRip2-v0.1.4-x64.7z`.
 
 The GitHub Actions workflow intentionally publishes only an app-only artifact. Full release packaging is local until the runtime payload is made reproducible from a clean checkout.

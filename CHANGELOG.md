@@ -4,6 +4,18 @@
 Unreleased
 ----------
 
+v0.1.4 (2026-05-28)
+-------------------
+
+- Fixed internal object cloning by separating trusted in-memory clone serialization from guarded file deserialization.
+- Made x86 smoke checks validate 32-bit CLR flags instead of only checking the PE machine type.
+- Changed x86 project output to true x86 instead of AnyCPU with Prefer32Bit.
+- Added x86 release packaging fallback to the bundled x64 7-Zip when the x86 runtime tree has no local 7-Zip copy.
+- Added timeout handling for tool update extraction so a stalled extractor cannot block indefinitely.
+- Made package configuration saving recreate `Apps/Conf` when it is missing.
+- Hardened temp cleanup and HDR metadata lookup against missing directories.
+- Made update checks match release assets for the current process architecture.
+
 v0.1.3 (2026-05-28)
 -------------------
 

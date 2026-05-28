@@ -3483,6 +3483,8 @@ Public Class Package
     End Sub
 
     Sub SaveConf()
+        IO.Directory.CreateDirectory(ConfPath.Dir)
+
         Dim sb As New StringBuilder
         sb.Append("Version = " + Version + BR +
                   "Date = " + VersionDate.ToInvariantString("yyyy-MM-dd"))

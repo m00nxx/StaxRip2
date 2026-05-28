@@ -77,11 +77,13 @@ function Resolve-SevenZip {
     $command = Get-Command "7z.exe" -ErrorAction SilentlyContinue
     if ($command) { return $command.Source }
 
+    $x64BinDirectory = Get-BinDirectory "x64"
     $candidates = @(
         (Join-Path $binDirectory "Apps\Support\7zip\7za.exe"),
+        (Join-Path $x64BinDirectory "Apps\Support\7zip\7za.exe"),
         "${env:ProgramFiles}\7-Zip\7z.exe",
         "${env:ProgramFiles(x86)}\7-Zip\7z.exe"
-    )
+    ) | Select-Object -Unique
 
     foreach ($candidate in $candidates) {
         if ($candidate -and (Test-Path $candidate)) { return $candidate }

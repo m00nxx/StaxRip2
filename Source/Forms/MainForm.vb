@@ -2703,7 +2703,7 @@ Partial Public Class MainForm
             If demuxSource Then Demux()
 
             If String.IsNullOrWhiteSpace(p.Hdr10PlusMetadataFile) OrElse String.IsNullOrWhiteSpace(p.HdrDolbyVisionMetadataFile?.Path) Then
-                Dim metadatas = Task.Run(Async Function() Await FindHdrMetadataAsync(p)).Result
+                Dim metadatas = FindHdrMetadata(p)
                 p.Hdr10PlusMetadataFile = If(String.IsNullOrWhiteSpace(metadatas.jsonFile), Nothing, metadatas.jsonFile)
                 p.HdrDolbyVisionMetadataFile = If(String.IsNullOrWhiteSpace(metadatas.rpuFile), Nothing, New DolbyVisionMetadataFile(metadatas.rpuFile))
             End If
@@ -3675,35 +3675,36 @@ Partial Public Class MainForm
         Next
     End Sub
 
-    Async Function FindHdrMetadataAsync(proj As Project) As Task(Of (jsonFile As String, rpuFile As String))
-        If proj Is Nothing Then Return Nothing
-        If String.IsNullOrWhiteSpace(proj.SourceFile) Then Return Nothing
-        If Not File.Exists(proj.SourceFile) Then Return Nothing
+    Function FindHdrMetadata(proj As Project) As (jsonFile As String, rpuFile As String)
+        If proj Is Nothing Then Return (Nothing, Nothing)
+        If String.IsNullOrWhiteSpace(proj.SourceFile) Then Return (Nothing, Nothing)
+        If Not File.Exists(proj.SourceFile) Then Return (Nothing, Nothing)
 
         Dim sourcePath = proj.SourceFile
         Dim jsonFile = ""
         Dim rpuFile = ""
         Dim files As IEnumerable(Of String)
 
-        Dim searchTask = Task.Run(Sub()
-                                      Try
-                                          files = Directory.GetFiles(sourcePath.Dir(), $"{sourcePath.Base}*.*", SearchOption.TopDirectoryOnly)
-                                          jsonFile = files.FirstOrDefault(Function (x) {"json"}.Contains(x.Ext) AndAlso Not x.Base.EndsWithAny("_L5", "_Config"))
-                                          rpuFile = files.FirstOrDefault(Function (x) {"bin", "rpu"}.Contains(x.Ext) AndAlso Not x.Base.EndsWith("_Cropped"))
+        Try
+            files = Directory.GetFiles(sourcePath.Dir(), $"{sourcePath.Base}*.*", SearchOption.TopDirectoryOnly)
+            jsonFile = files.FirstOrDefault(Function (x) {"json"}.Contains(x.Ext) AndAlso Not x.Base.EndsWithAny("_L5", "_Config"))
+            rpuFile = files.FirstOrDefault(Function (x) {"bin", "rpu"}.Contains(x.Ext) AndAlso Not x.Base.EndsWith("_Cropped"))
 
-                                          If Not String.IsNullOrWhiteSpace(proj.TempDir) AndAlso String.IsNullOrWhiteSpace(jsonFile) AndAlso String.IsNullOrWhiteSpace(rpuFile) Then
-                                              files = Directory.GetFiles(proj.TempDir, "*.*", SearchOption.TopDirectoryOnly)
-                                              jsonFile = If(String.IsNullOrWhiteSpace(jsonFile), files.FirstOrDefault(Function (x) {"json"}.Contains(x.Ext) AndAlso Not x.Base.EndsWithAny("_L5", "_Config")), jsonFile)
-                                              rpuFile = If(String.IsNullOrWhiteSpace(rpuFile), files.FirstOrDefault(Function (x) {"bin", "rpu"}.Contains(x.Ext) AndAlso Not x.Base.EndsWith("_Cropped")), rpuFile)
-                                          End If
-                                      Catch ex As Exception
-                                          Log.WriteLine(ex.Message)
-                                          Log.Save()
-                                      End Try
-                                  End Sub)
+            If Not String.IsNullOrWhiteSpace(proj.TempDir) AndAlso Directory.Exists(proj.TempDir) AndAlso String.IsNullOrWhiteSpace(jsonFile) AndAlso String.IsNullOrWhiteSpace(rpuFile) Then
+                files = Directory.GetFiles(proj.TempDir, "*.*", SearchOption.TopDirectoryOnly)
+                jsonFile = If(String.IsNullOrWhiteSpace(jsonFile), files.FirstOrDefault(Function (x) {"json"}.Contains(x.Ext) AndAlso Not x.Base.EndsWithAny("_L5", "_Config")), jsonFile)
+                rpuFile = If(String.IsNullOrWhiteSpace(rpuFile), files.FirstOrDefault(Function (x) {"bin", "rpu"}.Contains(x.Ext) AndAlso Not x.Base.EndsWith("_Cropped")), rpuFile)
+            End If
+        Catch ex As Exception
+            Log.WriteLine(ex.Message)
+            Log.Save()
+        End Try
 
-        Await searchTask
         Return (jsonFile, rpuFile)
+    End Function
+
+    Async Function FindHdrMetadataAsync(proj As Project) As Task(Of (jsonFile As String, rpuFile As String))
+        Return Await Task.Run(Function() FindHdrMetadata(proj))
     End Function
 
     Sub Demux()

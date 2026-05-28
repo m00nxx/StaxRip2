@@ -71,6 +71,75 @@ function Get-PEMachine {
     }
 }
 
+function Convert-RvaToFileOffset {
+    param(
+        [Parameter(Mandatory = $true)][object[]] $Sections,
+        [Parameter(Mandatory = $true)][uint32] $Rva
+    )
+
+    foreach ($section in $Sections) {
+        $size = [Math]::Max($section.VirtualSize, $section.SizeOfRawData)
+        if ($Rva -ge $section.VirtualAddress -and $Rva -lt ($section.VirtualAddress + $size)) {
+            return [int64]($section.PointerToRawData + ($Rva - $section.VirtualAddress))
+        }
+    }
+
+    throw "Unable to map RVA 0x$($Rva.ToString('x8')) to a file offset."
+}
+
+function Get-PECorFlags {
+    param([Parameter(Mandatory = $true)][string] $Path)
+
+    $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)
+    try {
+        $reader = New-Object System.IO.BinaryReader -ArgumentList $stream
+        if ($reader.ReadUInt16() -ne 0x5A4D) { throw "$Path is not a PE executable." }
+        $stream.Seek(0x3C, [IO.SeekOrigin]::Begin) | Out-Null
+        $peOffset = $reader.ReadInt32()
+        $stream.Seek($peOffset, [IO.SeekOrigin]::Begin) | Out-Null
+        if ($reader.ReadUInt32() -ne 0x4550) { throw "$Path has an invalid PE header." }
+
+        $stream.Seek(2, [IO.SeekOrigin]::Current) | Out-Null
+        $sectionCount = $reader.ReadUInt16()
+        $stream.Seek(12, [IO.SeekOrigin]::Current) | Out-Null
+        $optionalHeaderSize = $reader.ReadUInt16()
+        $stream.Seek(2, [IO.SeekOrigin]::Current) | Out-Null
+        $optionalHeaderOffset = $stream.Position
+        $magic = $reader.ReadUInt16()
+        $dataDirectoryOffset = if ($magic -eq 0x20B) { $optionalHeaderOffset + 112 } else { $optionalHeaderOffset + 96 }
+        $cliDirectoryOffset = $dataDirectoryOffset + (14 * 8)
+        $stream.Seek($cliDirectoryOffset, [IO.SeekOrigin]::Begin) | Out-Null
+        $cliHeaderRva = $reader.ReadUInt32()
+
+        $sections = @()
+        $sectionTableOffset = $optionalHeaderOffset + $optionalHeaderSize
+        $stream.Seek($sectionTableOffset, [IO.SeekOrigin]::Begin) | Out-Null
+
+        for ($index = 0; $index -lt $sectionCount; $index++) {
+            $stream.Seek(8, [IO.SeekOrigin]::Current) | Out-Null
+            $virtualSize = $reader.ReadUInt32()
+            $virtualAddress = $reader.ReadUInt32()
+            $sizeOfRawData = $reader.ReadUInt32()
+            $pointerToRawData = $reader.ReadUInt32()
+            $stream.Seek(16, [IO.SeekOrigin]::Current) | Out-Null
+            $sections += [pscustomobject]@{
+                VirtualSize = $virtualSize
+                VirtualAddress = $virtualAddress
+                SizeOfRawData = $sizeOfRawData
+                PointerToRawData = $pointerToRawData
+            }
+        }
+
+        $cliHeaderOffset = Convert-RvaToFileOffset $sections $cliHeaderRva
+        $stream.Seek($cliHeaderOffset + 16, [IO.SeekOrigin]::Begin) | Out-Null
+        return $reader.ReadUInt32()
+    }
+    finally {
+        if ($reader) { $reader.Dispose() }
+        $stream.Dispose()
+    }
+}
+
 function Assert-ExecutableArchitecture {
     param(
         [Parameter(Mandatory = $true)][string] $Path,
@@ -79,9 +148,19 @@ function Assert-ExecutableArchitecture {
 
     $machine = Get-PEMachine $Path
     $expectedMachine = if ($ExpectedPlatform -eq "x64") { 0x8664 } else { 0x014c }
+    $corFlags = Get-PECorFlags $Path
+    $COMIMAGE_FLAGS_32BITREQ = 0x2
 
     if ($machine -ne $expectedMachine) {
         throw "$Path has PE machine 0x$($machine.ToString('x4')), expected $ExpectedPlatform."
+    }
+
+    if ($ExpectedPlatform -eq "x86" -and (($corFlags -band $COMIMAGE_FLAGS_32BITREQ) -eq 0)) {
+        throw "$Path is not marked 32BITREQ for x86 packages."
+    }
+
+    if ($ExpectedPlatform -eq "x64" -and (($corFlags -band $COMIMAGE_FLAGS_32BITREQ) -ne 0)) {
+        throw "$Path is unexpectedly marked 32BITREQ for x64 packages."
     }
 }
 
@@ -147,6 +226,16 @@ function Resolve-SevenZip {
     foreach ($commandName in @("7z.exe", "7za.exe", "7z")) {
         $command = Get-Command $commandName -ErrorAction SilentlyContinue
         if ($command) { return $command.Source }
+    }
+
+    $x64BinDirectory = Get-BinDirectory "x64"
+    $candidates = @(
+        (Join-Path $binDirectory "Apps\Support\7zip\7za.exe"),
+        (Join-Path $x64BinDirectory "Apps\Support\7zip\7za.exe")
+    ) | Select-Object -Unique
+
+    foreach ($candidate in $candidates) {
+        if ($candidate -and (Test-Path $candidate)) { return $candidate }
     }
 
     throw "7z was not found in PATH."

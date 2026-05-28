@@ -60,6 +60,7 @@ Public Class StaxRipUpdate
             Const url = "https://api.github.com/repos/m00nxx/StaxRip2/releases?per_page=5"
 
             Dim currentVersion = Assembly.GetEntryAssembly().GetName().Version
+            Dim assetPlatform = If(x64, "x64", "x86")
 
             If Not HttpClient.DefaultRequestHeaders.UserAgent.ToString().Contains("Release-Checker") Then
                 HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Release-Checker")
@@ -69,7 +70,8 @@ Public Class StaxRipUpdate
             response.EnsureSuccessStatusCode()
             Dim content = Await response.Content.ReadAsStringAsync()
 
-            Dim linkMatches = Regex.Matches(content, "(?<=""browser_download_url"":"")https://github\.com/m00nxx/StaxRip2/releases/download/(?<tag>v\d+\.\d+\.\d+(?:\.\d+)?)/StaxRip2-v?(?<version>\d+\.\d+\.\d+(?:\.\d+)?)-x64(?<type>-.+?)?\.7z(?="")")
+            Dim linkPattern = $"(?<=""browser_download_url"":"")https://github\.com/m00nxx/StaxRip2/releases/download/(?<tag>v\d+\.\d+\.\d+(?:\.\d+)?)/StaxRip2-v?(?<version>\d+\.\d+\.\d+(?:\.\d+)?)-{Regex.Escape(assetPlatform)}(?<type>-.+?)?\.7z(?="")"
+            Dim linkMatches = Regex.Matches(content, linkPattern)
             Dim latestVersions = New List(Of (Version As Version, ReleaseType As String, ReleaseUri As String, DownloadUri As String))
 
             For Each linkMatch As Match In linkMatches

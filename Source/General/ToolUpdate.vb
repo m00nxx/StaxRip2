@@ -7,6 +7,8 @@ Imports Microsoft.VisualBasic
 Imports StaxRip.UI
 
 Public Class ToolUpdate
+    Private Const ExtractTimeoutMilliseconds As Integer = 10 * 60 * 1000
+
     Property Package As Package
     Property DownloadFile As String
     Property ExtractDir As String
@@ -99,8 +101,19 @@ Public Class ToolUpdate
             pr.StartInfo.FileName = Package.SevenZip.Path
             pr.StartInfo.Arguments = "x -y " + DownloadFile.Escape + " -o""" + ExtractDir + """"
             pr.StartInfo.UseShellExecute = False
+            pr.StartInfo.CreateNoWindow = True
             pr.Start()
-            pr.WaitForExit()
+
+            If Not pr.WaitForExit(ExtractTimeoutMilliseconds) Then
+                Try
+                    pr.Kill()
+                Catch
+                End Try
+
+                UpdatePackageDialog()
+                MsgError("Extraction timed out.")
+                Exit Sub
+            End If
 
             If pr.ExitCode <> 0 Then
                 UpdatePackageDialog()

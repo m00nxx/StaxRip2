@@ -1,20 +1,19 @@
-# StaxRip2 v0.1.3
+# StaxRip2 v0.1.4
 
-This release hardens release packaging, package smoke checks, serialization binding, HDR metadata discovery, and fork-facing documentation.
+This release fixes follow-up issues found during deeper bug hunting after v0.1.3.
 
 ## Changes
 
-- Fixed x86 release packaging so x86 archives are built from `Source/bin-x86`.
-- Narrowed binary serialization type binding with explicit allowed type names and type-name prefixes.
-- Added CI package smoke coverage with a minimal runtime fixture.
-- Added package smoke validation for PowerShell discovery and executable architecture.
-- Hardened HDR metadata discovery so missing source paths are skipped before MediaInfo and directory scans.
-- Hardened tool update download parsing with URI-based relative URL resolution and a clear no-asset message.
-- Removed confusing fork funding links and disabled the obsolete legacy upstream updater script.
-- Updated build docs, issue templates, release notes, and inherited documentation notices for the StaxRip2 fork.
+- Fixed internal object cloning by separating trusted in-memory clone serialization from guarded file deserialization.
+- Changed x86 builds to true x86 output and strengthened smoke checks to validate 32-bit CLR flags.
+- Added a release packaging fallback so x86 packages can use the bundled x64 7-Zip when needed.
+- Added timeout handling for tool update extraction.
+- Made package configuration saving recreate `Apps/Conf` when missing.
+- Hardened temp cleanup and HDR metadata lookup against missing directories.
+- Made update checks match release assets for the current process architecture.
 
 ## Notes
 
-- Full release archive: `StaxRip2-v0.1.3-x64.7z`
+- Full release archive: `StaxRip2-v0.1.4-x64.7z`
 - The GitHub Actions artifact is app-only and is not a full runtime package.
 - MIT license and original StaxRip attribution are preserved.

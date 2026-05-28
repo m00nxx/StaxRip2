@@ -799,6 +799,8 @@ Public Class GlobalClass
                 If proj.DeleteTempFilesSelectiveSelection.HasFlag(DeleteSelectiveSelection.Subtitles) Then extensions = extensions.Union(FileTypes.SubtitleExludingContainers)
         End Select
 
+        If Not Directory.Exists(proj.TempDir) Then Return
+
         Dim filesInTemp = Directory.GetFiles(proj.TempDir).AsEnumerable()
         If excludeSourcefile Then filesInTemp = filesInTemp.Where(Function(x) x <> proj.SourceFile)
         Dim filesToDelete As IEnumerable(Of String)

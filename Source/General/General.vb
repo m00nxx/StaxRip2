@@ -296,6 +296,10 @@ Public Class SafeSerialization
         Return New BinaryFormatter With {.Binder = New SafeSerializationBinder()}
     End Function
 
+    Shared Function CreateCloneFormatter() As BinaryFormatter
+        Return New BinaryFormatter()
+    End Function
+
     Shared Sub Serialize(o As Object, path As String)
         Dim list As New List(Of Object)
 
