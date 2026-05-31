@@ -13,6 +13,7 @@ param(
     [int] $ArchiveReadyTimeoutSeconds = 300,
     [string] $RuntimePayloadArchive = "",
     [string] $RuntimePayloadUrl = "",
+    [string] $RuntimePayloadSha256 = "",
     [string] $RuntimePayloadCacheDirectory = (Join-Path (Split-Path $PSScriptRoot -Parent) "Artifacts\RuntimePayload"),
     [switch] $SkipBuild,
     [switch] $SkipArchive,
@@ -25,6 +26,8 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $solution = Join-Path $PSScriptRoot "StaxRip.sln"
 $project = Join-Path $PSScriptRoot "StaxRip.vbproj" # Source/StaxRip.vbproj
+$ArtifactsDirectory = [IO.Path]::GetFullPath($ArtifactsDirectory)
+$RuntimePayloadCacheDirectory = [IO.Path]::GetFullPath($RuntimePayloadCacheDirectory)
 
 function Get-BinDirectory {
     param([ValidateSet("x64", "x86")][string] $TargetPlatform)
@@ -134,6 +137,31 @@ function Test-HasRuntimeAssets {
         (Test-Path (Join-Path $binDirectory "Settings\Templates"))
 }
 
+function Test-RuntimePayloadArchiveChecksum {
+    param([Parameter(Mandatory = $true)][string] $Archive)
+
+    if (-not $RuntimePayloadSha256) { return $true }
+    if (-not (Test-Path $Archive)) { return $false }
+
+    $actualHash = (Get-FileHash -LiteralPath $Archive -Algorithm SHA256).Hash
+    return $actualHash.Equals($RuntimePayloadSha256, [StringComparison]::OrdinalIgnoreCase)
+}
+
+function Assert-RuntimePayloadArchiveChecksum {
+    param([Parameter(Mandatory = $true)][string] $Archive)
+
+    if (-not (Test-RuntimePayloadArchiveChecksum $Archive)) {
+        $actualHash = if (Test-Path $Archive) {
+            (Get-FileHash -LiteralPath $Archive -Algorithm SHA256).Hash
+        }
+        else {
+            "<missing>"
+        }
+
+        throw "Runtime payload SHA256 mismatch for '$Archive'. Expected $RuntimePayloadSha256, got $actualHash."
+    }
+}
+
 function Download-RuntimePayloadArchive {
     if (-not $RuntimePayloadUrl) { return "" }
 
@@ -146,10 +174,20 @@ function Download-RuntimePayloadArchive {
     }
 
     $targetPath = Join-Path $RuntimePayloadCacheDirectory $fileName
+    $downloadPath = "$targetPath.download"
 
-    if (-not (Test-Path $targetPath)) {
-        Invoke-WebRequest -Uri $RuntimePayloadUrl -OutFile $targetPath
+    if (Test-Path $targetPath) {
+        if (Test-RuntimePayloadArchiveChecksum $targetPath) {
+            return $targetPath
+        }
+
+        Remove-Item -LiteralPath $targetPath -Force
     }
+
+    Remove-Item -LiteralPath $downloadPath -Force -ErrorAction SilentlyContinue
+    Invoke-WebRequest -Uri $RuntimePayloadUrl -OutFile $downloadPath
+    Move-Item -LiteralPath $downloadPath -Destination $targetPath -Force
+    Assert-RuntimePayloadArchiveChecksum $targetPath
 
     return $targetPath
 }
@@ -224,6 +262,7 @@ function Import-RuntimePayload {
 
     if (-not $archive) { return }
     if (-not (Test-Path $archive)) { throw "Runtime payload archive was not found: $archive" }
+    Assert-RuntimePayloadArchiveChecksum $archive
 
     $payloadRoot = Get-RuntimePayloadRoot $archive
     Copy-RuntimePayloadDirectory $payloadRoot "Apps"
@@ -243,7 +282,7 @@ function Wait-FileReady {
     for ($attempt = 0; $attempt -lt $TimeoutSeconds; $attempt++) {
         if (Test-Path $Path) {
             try {
-                $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None)
+                $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)
                 $length = $stream.Length
                 $stream.Dispose()
 
@@ -280,11 +319,39 @@ function Join-Argument {
     }) -join " "
 }
 
+function Invoke-MSBuild {
+    param(
+        [Parameter(Mandatory = $true)][string] $msbuild,
+        [Parameter(Mandatory = $true)][string] $BuildTarget
+    )
+
+    $stdout = Join-Path $env:TEMP "staxrip2-msbuild-out.txt"
+    $stderr = Join-Path $env:TEMP "staxrip2-msbuild-err.txt"
+    Remove-Item $stdout, $stderr -ErrorAction SilentlyContinue
+
+    $arguments = Join-Argument @(
+        $BuildTarget,
+        "/t:Rebuild",
+        "/p:Configuration=$Configuration",
+        "/p:Platform=$Platform",
+        "/m",
+        "/v:minimal"
+    )
+
+    $process = Start-Process -FilePath $msbuild -ArgumentList $arguments -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru
+
+    if (Test-Path $stdout) { Get-Content $stdout | Write-Host }
+    if (Test-Path $stderr) { Get-Content $stderr | Write-Host }
+
+    if ($process.ExitCode) {
+        throw "MSBuild failed with exit code $($process.ExitCode)."
+    }
+}
+
 if (-not $SkipBuild) {
     $msbuild = Resolve-MSBuild $MSBuildPath
     $buildTarget = If ($BuildScope -eq "Solution") { $solution } Else { $project }
-    & $msbuild $buildTarget /t:Rebuild /p:Configuration=$Configuration /p:Platform=$Platform /m /v:minimal
-    if ($LastExitCode) { throw "MSBuild failed with exit code $LastExitCode." }
+    Invoke-MSBuild $msbuild $buildTarget
 }
 
 Import-RuntimePayload

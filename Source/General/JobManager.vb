@@ -134,7 +134,6 @@ Public Class JobManager
                     counter += 1
 
                     If counter > 9 Then
-                        g.ShowException(ex, "Failed to load job file", jobsPath)
                         PreserveCorruptJobsFile(jobsPath, ex)
                         Exit While
                     End If

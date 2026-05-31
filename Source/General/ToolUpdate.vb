@@ -12,6 +12,7 @@ Public Class ToolUpdate
     Property Package As Package
     Property DownloadFile As String
     Property ExtractDir As String
+    Property ExtractRootDir As String
     Property TargetDir As String
     Property UseCurl As Boolean
 
@@ -95,66 +96,75 @@ Public Class ToolUpdate
             Exit Sub
         End If
 
-            ExtractDir = Path.Combine(DownloadFile.Dir, DownloadFile.Base + "-extract-" + Guid.NewGuid().ToString("N"))
+        ExtractDir = Path.Combine(DownloadFile.Dir, DownloadFile.Base + "-extract-" + Guid.NewGuid().ToString("N"))
+        ExtractRootDir = ExtractDir
+        Dim shouldCleanupExtractDir = True
 
-        Using pr As New Process
-            pr.StartInfo.FileName = Package.SevenZip.Path
-            pr.StartInfo.Arguments = "x -y " + DownloadFile.Escape + " -o""" + ExtractDir + """"
-            pr.StartInfo.UseShellExecute = False
-            pr.StartInfo.CreateNoWindow = True
-            pr.Start()
+        Try
+            Using pr As New Process
+                pr.StartInfo.FileName = Package.SevenZip.Path
+                pr.StartInfo.Arguments = "x -y " + DownloadFile.Escape + " -o""" + ExtractDir + """"
+                pr.StartInfo.UseShellExecute = False
+                pr.StartInfo.CreateNoWindow = True
+                pr.Start()
 
-            If Not pr.WaitForExit(ExtractTimeoutMilliseconds) Then
-                ProcessHelp.KillProcessAndChildren(pr.Id)
+                If Not pr.WaitForExit(ExtractTimeoutMilliseconds) Then
+                    ProcessHelp.KillProcessAndChildren(pr.Id)
 
-                UpdatePackageDialog()
-                MsgError("Extraction timed out.")
-                Exit Sub
-            End If
-
-            If pr.ExitCode <> 0 Then
-                UpdatePackageDialog()
-                MsgError("Extraction failed with error exit code " & pr.ExitCode)
-                Exit Sub
-            End If
-        End Using
-
-        If Not File.Exists(Path.Combine(ExtractDir, Package.Filename)) Then
-            Dim subDirs As New List(Of String)
-
-            For Each subDir In Directory.GetDirectories(ExtractDir, "*", SearchOption.AllDirectories)
-                If (Path.Combine(subDir, Package.Filename)).FileExists AndAlso Not Ignore(subDir) Then
-                    subDirs.Add(subDir)
+                    UpdatePackageDialog()
+                    MsgError("Extraction timed out.")
+                    Exit Sub
                 End If
-            Next
 
-            If subDirs.Count > 1 Then
-                UpdatePackageDialog()
+                If pr.ExitCode <> 0 Then
+                    UpdatePackageDialog()
+                    MsgError("Extraction failed with error exit code " & pr.ExitCode)
+                    Exit Sub
+                End If
+            End Using
 
-                Using td As New TaskDialog(Of String)
-                    td.Title = "Choose subfolder to extract."
+            If Not File.Exists(Path.Combine(ExtractDir, Package.Filename)) Then
+                Dim subDirs As New List(Of String)
 
-                    For Each subDir In subDirs
-                        Dim name = subDir.Replace(ExtractDir, "").TrimEnd(Path.DirectorySeparatorChar)
-                        td.AddCommand(name, subDir)
-                    Next
-
-                    If td.Show.DirExists Then
-                        ExtractDir = td.SelectedValue
+                For Each subDir In Directory.GetDirectories(ExtractDir, "*", SearchOption.AllDirectories)
+                    If (Path.Combine(subDir, Package.Filename)).FileExists AndAlso Not Ignore(subDir) Then
+                        subDirs.Add(subDir)
                     End If
-                End Using
-            ElseIf subDirs.Count = 1 Then
-                ExtractDir = subDirs(0)
+                Next
+
+                If subDirs.Count > 1 Then
+                    UpdatePackageDialog()
+
+                    Using td As New TaskDialog(Of String)
+                        td.Title = "Choose subfolder to extract."
+
+                        For Each subDir In subDirs
+                            Dim name = subDir.Replace(ExtractDir, "").TrimEnd(Path.DirectorySeparatorChar)
+                            td.AddCommand(name, subDir)
+                        Next
+
+                        If td.Show.DirExists Then
+                            ExtractDir = td.SelectedValue
+                        End If
+                    End Using
+                ElseIf subDirs.Count = 1 Then
+                    ExtractDir = subDirs(0)
+                End If
             End If
-        End If
 
-        If Not (Path.Combine(ExtractDir, Package.Filename)).FileExists Then
-            UpdatePackageDialog()
-            MsgError("File missing after extraction.")
-            Exit Sub
-        End If
+            If Not (Path.Combine(ExtractDir, Package.Filename)).FileExists Then
+                UpdatePackageDialog()
+                MsgError("File missing after extraction.")
+                Exit Sub
+            End If
 
-        ReplaceAfterConfirmation(True)
+            ReplaceAfterConfirmation(True)
+            shouldCleanupExtractDir = False
+        Finally
+            If shouldCleanupExtractDir Then
+                CleanupExtractDir()
+            End If
+        End Try
     End Sub
 
     Sub ReplaceAfterConfirmation(Optional deleteExtractDirOnCancel As Boolean = False)
@@ -165,8 +175,24 @@ Public Class ToolUpdate
             MsgInfo("Update was canceled.")
 
             If deleteExtractDirOnCancel Then
-                FolderHelp.Delete(ExtractDir)
+                CleanupExtractDir()
             End If
+        End If
+    End Sub
+
+    Function GetExtractCleanupDir() As String
+        Return If(Not String.IsNullOrWhiteSpace(ExtractRootDir), ExtractRootDir, ExtractDir)
+    End Function
+
+    Sub CleanupExtractDir(Optional recycle As Boolean = False)
+        Dim cleanupDir = GetExtractCleanupDir()
+
+        If String.IsNullOrWhiteSpace(cleanupDir) OrElse Not Directory.Exists(cleanupDir) Then Return
+
+        If recycle Then
+            FolderHelp.Delete(cleanupDir, FileIO.RecycleOption.SendToRecycleBin)
+        Else
+            FolderHelp.Delete(cleanupDir)
         End If
     End Sub
 
@@ -194,8 +220,17 @@ Public Class ToolUpdate
             FolderHelp.Delete(backupDir, FileIO.RecycleOption.SendToRecycleBin)
         Catch ex As Exception
             RestoreBackup(backupDir)
+            CleanupExtractDir()
             UpdatePackageDialog()
             MsgError("Tool update failed while replacing files. Existing files were restored." + BR2 + ex.Message)
+            Return
+        End Try
+
+        Try
+            TryUpdatePackageVersion()
+        Catch ex As Exception
+            UpdatePackageDialog()
+            MsgError("Tool update completed, but updating the stored version or testing commands failed." + BR2 + ex.Message)
         End Try
     End Sub
 
@@ -263,15 +298,16 @@ Public Class ToolUpdate
             FolderHelp.Copy(folder, Path.Combine(TargetDir, folder.FileName))
         Next
 
-        FolderHelp.Delete(ExtractDir, FileIO.RecycleOption.SendToRecycleBin)
-        EditVersion()
+        CleanupExtractDir(True)
     End Sub
 
-    Sub EditVersion()
-        Dim msg = "What's the name of the new version?" + BR2 + DownloadFile.FileName
+    Sub TryUpdatePackageVersion()
+        Dim sourceName = If(String.IsNullOrWhiteSpace(DownloadFile), Package.Name, DownloadFile.FileName)
+        Dim defaultVersionName = If(String.IsNullOrWhiteSpace(DownloadFile), Package.Version, DownloadFile.Base)
+        Dim msg = "What's the name of the new version?" + BR2 + sourceName
 
         UpdatePackageDialog()
-        Dim input = InputBox.Show(msg, DownloadFile.Base)
+        Dim input = InputBox.Show(msg, defaultVersionName)
 
         If input <> "" Then
             Package.SetVersion(input.Replace(";", "_").Trim)

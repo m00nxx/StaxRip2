@@ -1,8 +1,20 @@
 ﻿StaxRip2 Changelog
 ==================
 
-Unreleased
-----------
+v0.1.7 (2026-05-31)
+-------------------
+
+- Validated cached runtime payload archives with optional SHA256 checks and atomic `.download` files before reuse.
+- Separated tool replacement rollback from post-copy version metadata updates so a successful file replacement is not rolled back by a later version/test failure.
+- Cleaned tool update extraction folders on timeout, extraction failure, missing executable, cancellation, and replacement failure paths.
+- Hardened update checks against malformed GitHub release data and corrupted dismissed-version settings.
+- Added stream-drain timeout handling and safer process-tree termination for external console helpers.
+- Extended eac3to analysis timeout handling by draining stderr and using an explicit longer analysis timeout.
+- Fixed release and smoke packaging script process invocation so nested MSBuild/PowerShell calls execute reliably from Windows shells launched by WSL/Codex.
+- Made archive readiness checks tolerate antivirus or indexer readers after 7-Zip exits.
+- Made missing source filter failures explicit instead of allowing later script errors.
+- Avoided duplicate dialogs when preserving unreadable or corrupt `Jobs.dat` files.
+- Updated release notes and build documentation for the v0.1.7 package.
 
 v0.1.6 (2026-05-31)
 -------------------

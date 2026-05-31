@@ -2914,6 +2914,17 @@ Partial Public Class MainForm
         SetSourceFilter(sourceFilter, preferences, profiles, sourceFormat, True, False, False, True)
         SetSourceFilter(sourceFilter, preferences, profiles, sourceFormat, False, False, False, False)
 
+        sourceFilter = p.Script.GetFilter("Source")
+
+        If sourceFilter Is Nothing OrElse String.IsNullOrWhiteSpace(sourceFilter.Script) Then
+            Dim message = "No source filter is available for the current script engine."
+            Log.WriteHeader("Error opening source")
+            Log.WriteLine(message + BR2)
+            Log.Save()
+            MsgError("Source Filter Error", message, Handle, timeout)
+            Throw New AbortException
+        End If
+
         If editAVS Then
             If Not sourceFilter.Script.Contains("(") Then
                 Dim filter = VideoFilter.GetDefault("Source", "FFVideoSource")

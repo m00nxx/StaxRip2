@@ -10,6 +10,7 @@ param(
     [int] $ArchiveReadyTimeoutSeconds = 300,
     [string] $RuntimePayloadArchive = "",
     [string] $RuntimePayloadUrl = "",
+    [string] $RuntimePayloadSha256 = "",
     [switch] $SkipBuild,
     [switch] $SkipArchive,
     [switch] $KeepStaging,
@@ -40,6 +41,35 @@ function Resolve-PowerShell {
     }
 
     throw "PowerShell was not found."
+}
+
+function Join-Argument {
+    param([Parameter(Mandatory = $true)][string[]] $Arguments)
+
+    return ($Arguments | ForEach-Object {
+        if ($_ -match '[\s"]') {
+            '"' + $_.Replace('"', '`"') + '"'
+        }
+        else {
+            $_
+        }
+    }) -join " "
+}
+
+function Invoke-PowerShellScript {
+    param([Parameter(Mandatory = $true)][string[]] $Arguments)
+
+    $suffix = [Guid]::NewGuid().ToString("N")
+    $stdout = Join-Path $env:TEMP "staxrip2-smoke-powershell-$suffix-out.txt"
+    $stderr = Join-Path $env:TEMP "staxrip2-smoke-powershell-$suffix-err.txt"
+    $process = Start-Process -FilePath $powershellExe -ArgumentList (Join-Argument $Arguments) -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru
+
+    if (Test-Path $stdout) { Get-Content $stdout | Write-Host }
+    if (Test-Path $stderr) { Get-Content $stderr | Write-Host }
+
+    if ($process.ExitCode) {
+        throw "PowerShell script failed with exit code $($process.ExitCode)."
+    }
 }
 
 $binDirectory = Get-BinDirectory $Platform
@@ -319,7 +349,7 @@ function Assert-FullRuntimeArchive {
     }
 }
 
-& $powershellExe -NoProfile -ExecutionPolicy Bypass -File $sourceChecks
+Invoke-PowerShellScript @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $sourceChecks)
 
 if ($UseMinimalRuntimeFixture) {
     Initialize-MinimalRuntimeFixture
@@ -347,6 +377,9 @@ if ($RuntimePayloadArchive) {
 if ($RuntimePayloadUrl) {
     $releaseArgs += @("-RuntimePayloadUrl", $RuntimePayloadUrl)
 }
+if ($RuntimePayloadSha256) {
+    $releaseArgs += @("-RuntimePayloadSha256", $RuntimePayloadSha256)
+}
 if ($SkipBuild) {
     $releaseArgs += "-SkipBuild"
 }
@@ -360,10 +393,7 @@ if ($RequireFullRuntime) {
     $releaseArgs += "-RequireFullRuntime"
 }
 
-& $powershellExe @releaseArgs
-if ($LastExitCode) {
-    throw "Release packaging failed with exit code $LastExitCode."
-}
+Invoke-PowerShellScript $releaseArgs
 
 Assert-ExecutableArchitecture $appExe $Platform
 

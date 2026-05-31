@@ -71,15 +71,26 @@ Public Class StaxRipUpdate
             Dim content = Await response.Content.ReadAsStringAsync()
 
             Dim latestVersions = New List(Of (Version As Version, ReleaseType As String, ReleaseUri As String, DownloadUri As String))
-            Dim releases = DirectCast(New JavaScriptSerializer().DeserializeObject(content), Object())
+            Dim releases = TryCast(New JavaScriptSerializer().DeserializeObject(content), Object())
+
+            If releases Is Nothing Then
+                Throw New FormatException("GitHub releases response was not a JSON array.")
+            End If
 
             For Each release In releases.OfType(Of Dictionary(Of String, Object))()
-                Dim tag = CStr(release("tag_name"))
-                Dim assets = DirectCast(release("assets"), Object())
+                Dim tag = ""
+                Dim assets As Object() = Nothing
+
+                If Not TryGetStringValue(release, "tag_name", tag) Then Continue For
+                If Not TryGetObjectArrayValue(release, "assets", assets) Then Continue For
 
                 For Each asset In assets.OfType(Of Dictionary(Of String, Object))()
-                    Dim downloadUri = CStr(asset("browser_download_url"))
-                    Dim assetName = CStr(asset("name"))
+                    Dim downloadUri = ""
+                    Dim assetName = ""
+
+                    If Not TryGetStringValue(asset, "browser_download_url", downloadUri) Then Continue For
+                    If Not TryGetStringValue(asset, "name", assetName) Then Continue For
+
                     Dim assetMatch = Text.RegularExpressions.Regex.Match(assetName, "^StaxRip2-v?(?<version>\d+\.\d+\.\d+(?:\.\d+)?)-(?<platform>x64|x86)(?<type>-.+?)?\.7z$")
 
                     If Not assetMatch.Success Then Continue For
@@ -89,10 +100,17 @@ Public Class StaxRipUpdate
                     Dim releaseType = If(type = "-UPDATE", "tool including update",
                                         If(type = "-EXE", "hotfix/update", "release"))
                     Dim onlineVersionString = assetMatch.Groups("version").Value
-                    Dim onlineVersion = Version.Parse(onlineVersionString)
-                    Dim releaseUri = $"https://github.com/m00nxx/StaxRip2/releases/tag/{tag}"
+                    Dim onlineVersion As Version = Nothing
 
-                    If onlineVersion <= currentVersion OrElse (s.CheckForUpdatesDismissed <> "" AndAlso Version.Parse(s.CheckForUpdatesDismissed) >= onlineVersion) Then Continue For
+                    If Not Version.TryParse(onlineVersionString, onlineVersion) Then Continue For
+
+                    Dim releaseUri = $"https://github.com/m00nxx/StaxRip2/releases/tag/{tag}"
+                    Dim dismissedVersion As Version = Nothing
+                    Dim isDismissed = Not String.IsNullOrWhiteSpace(s.CheckForUpdatesDismissed) AndAlso
+                        Version.TryParse(s.CheckForUpdatesDismissed, dismissedVersion) AndAlso
+                        dismissedVersion >= onlineVersion
+
+                    If onlineVersion <= currentVersion OrElse isDismissed Then Continue For
 
                     latestVersions.Add((onlineVersion, releaseType, releaseUri, downloadUri))
                 Next
@@ -130,4 +148,30 @@ Public Class StaxRipUpdate
             If force Then g.ShowException(ex)
         End Try
     End Sub
+
+    Private Shared Function TryGetStringValue(values As Dictionary(Of String, Object), key As String, ByRef value As String) As Boolean
+        value = ""
+
+        If values Is Nothing Then Return False
+
+        Dim rawValue As Object = Nothing
+
+        If Not values.TryGetValue(key, rawValue) OrElse rawValue Is Nothing Then Return False
+
+        value = TryCast(rawValue, String)
+        Return Not String.IsNullOrWhiteSpace(value)
+    End Function
+
+    Private Shared Function TryGetObjectArrayValue(values As Dictionary(Of String, Object), key As String, ByRef value As Object()) As Boolean
+        value = Nothing
+
+        If values Is Nothing Then Return False
+
+        Dim rawValue As Object = Nothing
+
+        If Not values.TryGetValue(key, rawValue) OrElse rawValue Is Nothing Then Return False
+
+        value = TryCast(rawValue, Object())
+        Return value IsNot Nothing
+    End Function
 End Class

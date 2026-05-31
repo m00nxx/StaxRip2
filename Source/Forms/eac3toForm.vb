@@ -582,6 +582,7 @@ Public Class eac3toForm
     Property PlaylistID As Integer
     Property Streams As New BindingList(Of M2TSStream)
 
+    Private Const AnalyzeTimeoutMilliseconds As Integer = 30 * 60 * 1000
     Private Output As String
     Private ReadOnly AudioOutputFormats As String() = {"m4a", "ac3", "dts", "flac", "pcm", "wav", "dtsma", "dtshr", "eac3", "thd"}
 
@@ -736,14 +737,18 @@ Public Class eac3toForm
 
         Using pr As New Process
             AddHandler pr.OutputDataReceived, AddressOf OutputDataReceived
+            AddHandler pr.ErrorDataReceived, AddressOf OutputDataReceived
             pr.StartInfo.FileName = Package.eac3to.Path
             pr.StartInfo.Arguments = args
             pr.StartInfo.CreateNoWindow = True
             pr.StartInfo.UseShellExecute = False
             pr.StartInfo.RedirectStandardOutput = True
+            pr.StartInfo.RedirectStandardError = True
             pr.Start()
             pr.BeginOutputReadLine()
-            If Not pr.WaitForExit(ProcessHelp.DefaultConsoleOutputTimeoutMilliseconds) Then
+            pr.BeginErrorReadLine()
+
+            If Not pr.WaitForExit(AnalyzeTimeoutMilliseconds) Then
                 ProcessHelp.KillProcessAndChildren(pr.Id)
                 BeginInvoke(Sub()
                                 MsgError("eac3to timed out while analyzing the source.", Output)
@@ -751,6 +756,8 @@ Public Class eac3toForm
                             End Sub)
                 Exit Sub
             End If
+
+            pr.WaitForExit()
 
             If pr.ExitCode <> 0 Then
                 Dim exitCode = pr.ExitCode

@@ -218,7 +218,15 @@ Public Class ProcessHelp
             End If
 
             proc.WaitForExit()
-            Task.WaitAll(New Task() {stdoutTask, stderrTask})
+
+            Dim streamTasks As Task() = {stdoutTask, stderrTask}
+
+            If Not Task.WaitAll(streamTasks, timeoutMilliseconds) Then
+                KillProcessAndChildren(proc.Id)
+
+                Throw New TimeoutException($"Process output streams timed out after {timeoutMilliseconds} ms: {file} {arguments}")
+            End If
+
             ret = If(stderr, stderrTask.Result, stdoutTask.Result)
         End Using
 
@@ -240,8 +248,8 @@ Public Class ProcessHelp
         Try
             Dim proc As Process = Process.GetProcessById(pid)
             proc.Kill()
-            ' process already exited 
-        Catch generatedExceptionName As ArgumentException
+            ' process already exited, cannot be killed, or access was denied
+        Catch ex As Exception When TypeOf ex Is ArgumentException OrElse TypeOf ex Is InvalidOperationException OrElse TypeOf ex Is Win32Exception
         End Try
     End Sub
 
