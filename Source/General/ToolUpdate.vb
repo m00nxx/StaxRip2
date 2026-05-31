@@ -95,7 +95,7 @@ Public Class ToolUpdate
             Exit Sub
         End If
 
-        ExtractDir = Path.Combine(DownloadFile.Dir, DownloadFile.Base)
+            ExtractDir = Path.Combine(DownloadFile.Dir, DownloadFile.Base + "-extract-" + Guid.NewGuid().ToString("N"))
 
         Using pr As New Process
             pr.StartInfo.FileName = Package.SevenZip.Path
@@ -105,10 +105,7 @@ Public Class ToolUpdate
             pr.Start()
 
             If Not pr.WaitForExit(ExtractTimeoutMilliseconds) Then
-                Try
-                    pr.Kill()
-                Catch
-                End Try
+                ProcessHelp.KillProcessAndChildren(pr.Id)
 
                 UpdatePackageDialog()
                 MsgError("Extraction timed out.")
@@ -157,7 +154,7 @@ Public Class ToolUpdate
             Exit Sub
         End If
 
-        ReplaceAfterConfirmation()
+        ReplaceAfterConfirmation(True)
     End Sub
 
     Sub ReplaceAfterConfirmation(Optional deleteExtractDirOnCancel As Boolean = False)
@@ -189,12 +186,37 @@ Public Class ToolUpdate
     End Function
 
     Sub ReplaceFiles()
+        Dim backupDir = CreateBackupDirectory()
+
+        Try
+            MoveCurrentFilesToBackup(backupDir)
+            CopyFiles()
+            FolderHelp.Delete(backupDir, FileIO.RecycleOption.SendToRecycleBin)
+        Catch ex As Exception
+            RestoreBackup(backupDir)
+            UpdatePackageDialog()
+            MsgError("Tool update failed while replacing files. Existing files were restored." + BR2 + ex.Message)
+        End Try
+    End Sub
+
+    Function CreateBackupDirectory() As String
+        Dim backupDir = Path.Combine(TargetDir.Dir, $"{TargetDir.FileName}.staxrip2-update-backup-{DateTime.Now:yyyyMMddHHmmss}")
+
+        If Directory.Exists(backupDir) Then
+            backupDir += "-" + Guid.NewGuid().ToString("N")
+        End If
+
+        Directory.CreateDirectory(backupDir)
+        Return backupDir
+    End Function
+
+    Sub MoveCurrentFilesToBackup(backupDir As String)
         For Each file In Directory.GetFiles(TargetDir)
             If file.FileName.EqualsAny(Package.Keep) Then
                 Continue For
             End If
 
-            FileHelp.Delete(file, FileIO.RecycleOption.SendToRecycleBin)
+            IO.File.Move(file, Path.Combine(backupDir, file.FileName))
         Next
 
         For Each folder In Directory.GetDirectories(TargetDir)
@@ -202,10 +224,32 @@ Public Class ToolUpdate
                 Continue For
             End If
 
+            Directory.Move(folder, Path.Combine(backupDir, folder.FileName))
+        Next
+    End Sub
+
+    Sub RestoreBackup(backupDir As String)
+        If Not Directory.Exists(backupDir) Then Return
+
+        For Each file In Directory.GetFiles(TargetDir)
+            If file.FileName.EqualsAny(Package.Keep) Then Continue For
+            FileHelp.Delete(file, FileIO.RecycleOption.SendToRecycleBin)
+        Next
+
+        For Each folder In Directory.GetDirectories(TargetDir)
+            If folder.FileName.EqualsAny(Package.Keep) Then Continue For
             FolderHelp.Delete(folder, FileIO.RecycleOption.SendToRecycleBin)
         Next
 
-        CopyFiles()
+        For Each file In Directory.GetFiles(backupDir)
+            IO.File.Move(file, Path.Combine(TargetDir, file.FileName))
+        Next
+
+        For Each folder In Directory.GetDirectories(backupDir)
+            Directory.Move(folder, Path.Combine(TargetDir, folder.FileName))
+        Next
+
+        FolderHelp.Delete(backupDir)
     End Sub
 
     Sub CopyFiles()

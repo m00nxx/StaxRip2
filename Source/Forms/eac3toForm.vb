@@ -743,7 +743,14 @@ Public Class eac3toForm
             pr.StartInfo.RedirectStandardOutput = True
             pr.Start()
             pr.BeginOutputReadLine()
-            pr.WaitForExit()
+            If Not pr.WaitForExit(ProcessHelp.DefaultConsoleOutputTimeoutMilliseconds) Then
+                ProcessHelp.KillProcessAndChildren(pr.Id)
+                BeginInvoke(Sub()
+                                MsgError("eac3to timed out while analyzing the source.", Output)
+                                Cancel()
+                            End Sub)
+                Exit Sub
+            End If
 
             If pr.ExitCode <> 0 Then
                 Dim exitCode = pr.ExitCode

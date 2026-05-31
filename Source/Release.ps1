@@ -11,6 +11,9 @@ param(
     [int] $CompressionLevel = 5,
     [ValidateRange(1, 3600)]
     [int] $ArchiveReadyTimeoutSeconds = 300,
+    [string] $RuntimePayloadArchive = "",
+    [string] $RuntimePayloadUrl = "",
+    [string] $RuntimePayloadCacheDirectory = (Join-Path (Split-Path $PSScriptRoot -Parent) "Artifacts\RuntimePayload"),
     [switch] $SkipBuild,
     [switch] $SkipArchive,
     [switch] $KeepStaging,
@@ -110,6 +113,8 @@ function Assert-FullRuntimeAssets {
         "Apps\Support\MKVToolNix\mkvmerge.exe",
         "Apps\FrameServer\VapourSynth\VSPipe.exe",
         "Apps\Encoders\x265\x265.exe",
+        "Fonts\Default\Anuphan\Anuphan-VariableFont_wght.ttf",
+        "Fonts\Code\Roboto_Mono\RobotoMono-VariableFont_wght.ttf",
         "Settings\Templates\Automatic Workflow.srip",
         "Settings\Templates\Manual Workflow.srip",
         "Settings\Templates\Re-mux.srip"
@@ -121,6 +126,109 @@ function Assert-FullRuntimeAssets {
             throw "Required full runtime asset is missing: $relativePath"
         }
     }
+}
+
+function Test-HasRuntimeAssets {
+    return (Test-Path (Join-Path $binDirectory "Apps\Conf")) -and
+        (Test-Path (Join-Path $binDirectory "Fonts\Icons")) -and
+        (Test-Path (Join-Path $binDirectory "Settings\Templates"))
+}
+
+function Download-RuntimePayloadArchive {
+    if (-not $RuntimePayloadUrl) { return "" }
+
+    New-Item -ItemType Directory -Path $RuntimePayloadCacheDirectory -Force | Out-Null
+
+    $uri = [Uri] $RuntimePayloadUrl
+    $fileName = [IO.Path]::GetFileName($uri.LocalPath)
+    if (-not $fileName) {
+        $fileName = "runtime-payload.7z"
+    }
+
+    $targetPath = Join-Path $RuntimePayloadCacheDirectory $fileName
+
+    if (-not (Test-Path $targetPath)) {
+        Invoke-WebRequest -Uri $RuntimePayloadUrl -OutFile $targetPath
+    }
+
+    return $targetPath
+}
+
+function Get-RuntimePayloadRoot {
+    param([Parameter(Mandatory = $true)][string] $Archive)
+
+    $sevenZip = Resolve-SevenZip $SevenZipPath
+    $extractDirectory = Join-Path $RuntimePayloadCacheDirectory ([IO.Path]::GetFileNameWithoutExtension($Archive))
+
+    if (Test-Path $extractDirectory) {
+        Remove-Item $extractDirectory -Recurse -Force
+    }
+
+    New-Item -ItemType Directory -Path $extractDirectory -Force | Out-Null
+
+    $stdout = Join-Path $env:TEMP "staxrip2-runtime-payload-7z-out.txt"
+    $stderr = Join-Path $env:TEMP "staxrip2-runtime-payload-7z-err.txt"
+    Remove-Item $stdout, $stderr -ErrorAction SilentlyContinue
+    $arguments = Join-Argument @("x", "-y", $Archive, "-o$extractDirectory")
+    $process = Start-Process -FilePath $sevenZip -ArgumentList $arguments -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru
+
+    if ($process.ExitCode) {
+        if (Test-Path $stdout) { Get-Content $stdout | Write-Host }
+        if (Test-Path $stderr) { Get-Content $stderr | Write-Host }
+        throw "Runtime payload extraction failed with exit code $($process.ExitCode)."
+    }
+
+    $candidates = @($extractDirectory)
+    $candidates += Get-ChildItem -LiteralPath $extractDirectory -Directory -Recurse | ForEach-Object FullName
+
+    foreach ($candidate in $candidates) {
+        if ((Test-Path (Join-Path $candidate "Apps\Conf")) -and
+            (Test-Path (Join-Path $candidate "Fonts\Icons")) -and
+            (Test-Path (Join-Path $candidate "Settings\Templates"))) {
+            return $candidate
+        }
+    }
+
+    throw "Runtime payload archive does not contain the expected StaxRip2 runtime folders."
+}
+
+function Copy-RuntimePayloadDirectory {
+    param(
+        [Parameter(Mandatory = $true)][string] $PayloadRoot,
+        [Parameter(Mandatory = $true)][string] $RelativePath
+    )
+
+    $source = Join-Path $PayloadRoot $RelativePath
+    if (-not (Test-Path $source)) { return }
+
+    $destination = Join-Path $binDirectory $RelativePath
+    if (Test-Path $destination) {
+        Remove-Item $destination -Recurse -Force
+    }
+
+    $parent = Split-Path $destination -Parent
+    if (-not (Test-Path $parent)) {
+        New-Item -ItemType Directory -Path $parent -Force | Out-Null
+    }
+
+    Copy-Item -LiteralPath $source -Destination $destination -Recurse -Force
+}
+
+function Import-RuntimePayload {
+    if ((Test-HasRuntimeAssets) -and -not ($RequireFullRuntime -and ($RuntimePayloadArchive -or $RuntimePayloadUrl))) { return }
+
+    $archive = $RuntimePayloadArchive
+    if (-not $archive) {
+        $archive = Download-RuntimePayloadArchive
+    }
+
+    if (-not $archive) { return }
+    if (-not (Test-Path $archive)) { throw "Runtime payload archive was not found: $archive" }
+
+    $payloadRoot = Get-RuntimePayloadRoot $archive
+    Copy-RuntimePayloadDirectory $payloadRoot "Apps"
+    Copy-RuntimePayloadDirectory $payloadRoot "Fonts"
+    Copy-RuntimePayloadDirectory $payloadRoot "Settings\Templates"
 }
 
 function Wait-FileReady {
@@ -179,6 +287,7 @@ if (-not $SkipBuild) {
     if ($LastExitCode) { throw "MSBuild failed with exit code $LastExitCode." }
 }
 
+Import-RuntimePayload
 Assert-RuntimeAssets
 if ($RequireFullRuntime) {
     Assert-FullRuntimeAssets

@@ -2917,12 +2917,16 @@ Partial Public Class MainForm
         If editAVS Then
             If Not sourceFilter.Script.Contains("(") Then
                 Dim filter = VideoFilter.GetDefault("Source", "FFVideoSource")
-                p.Script.SetFilter(filter.Category, filter.Name, filter.Script)
+                If filter IsNot Nothing Then
+                    p.Script.SetFilter(filter.Category, filter.Name, filter.Script)
+                End If
             End If
         ElseIf editVS Then
             If Not sourceFilter.Script.Contains("(") Then
-                Dim filter = VideoFilter.GetDefault("Source", "ffms2", ScriptEngine.VapourSynth)
-                p.Script.SetFilter(filter.Category, filter.Name, filter.Script)
+                Dim fallbackFilter = VideoFilter.GetDefault("Source", "ffms2", ScriptEngine.VapourSynth)
+                If fallbackFilter IsNot Nothing Then
+                    p.Script.SetFilter(fallbackFilter.Category, fallbackFilter.Name, fallbackFilter.Script)
+                End If
             End If
         End If
 

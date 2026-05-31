@@ -4,6 +4,17 @@
 Unreleased
 ----------
 
+v0.1.6 (2026-05-31)
+-------------------
+
+- Added runtime payload bootstrapping for release packaging so clean source checkouts can import runtime folders from a previous StaxRip2 archive without replacing the freshly built executable.
+- Made tool replacement transactional by moving existing files to a rollback backup before copying replacements.
+- Killed external helper process trees on timeouts and added timeout handling to eac3to source analysis.
+- Hardened source filter fallback handling when default filters are missing from corrupt settings.
+- Preserved corrupt Jobs.dat files with a clear `.corrupt` backup name instead of silently dropping the job list.
+- Added full-runtime checks for bundled default/code font files used by the default UI settings.
+- Updated release notes and build documentation for the v0.1.6 package.
+
 v0.1.5 (2026-05-28)
 -------------------
 

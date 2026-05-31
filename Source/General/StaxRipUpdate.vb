@@ -3,7 +3,7 @@ Imports System.ComponentModel
 Imports System.Net
 Imports System.Net.Http
 Imports System.Reflection
-Imports System.Text.RegularExpressions
+Imports System.Web.Script.Serialization
 Imports System.Windows.Forms.VisualStyles.VisualStyleElement
 Imports Microsoft.VisualBasic
 
@@ -71,18 +71,24 @@ Public Class StaxRipUpdate
             Dim content = Await response.Content.ReadAsStringAsync()
 
             Dim latestVersions = New List(Of (Version As Version, ReleaseType As String, ReleaseUri As String, DownloadUri As String))
+            Dim releases = DirectCast(New JavaScriptSerializer().DeserializeObject(content), Object())
 
-            For Each assetPlatform In assetPlatforms
-                Dim linkPattern = $"(?<=""browser_download_url"":"")https://github\.com/m00nxx/StaxRip2/releases/download/(?<tag>v\d+\.\d+\.\d+(?:\.\d+)?)/StaxRip2-v?(?<version>\d+\.\d+\.\d+(?:\.\d+)?)-{Regex.Escape(assetPlatform)}(?<type>-.+?)?\.7z(?="")"
-                Dim linkMatches = Regex.Matches(content, linkPattern)
+            For Each release In releases.OfType(Of Dictionary(Of String, Object))()
+                Dim tag = CStr(release("tag_name"))
+                Dim assets = DirectCast(release("assets"), Object())
 
-                For Each linkMatch As Match In linkMatches
-                    Dim downloadUri = linkMatch.Groups(0).Value
-                    Dim tag = linkMatch.Groups("tag").Value
-                    Dim type = linkMatch.Groups("type").Value
+                For Each asset In assets.OfType(Of Dictionary(Of String, Object))()
+                    Dim downloadUri = CStr(asset("browser_download_url"))
+                    Dim assetName = CStr(asset("name"))
+                    Dim assetMatch = Text.RegularExpressions.Regex.Match(assetName, "^StaxRip2-v?(?<version>\d+\.\d+\.\d+(?:\.\d+)?)-(?<platform>x64|x86)(?<type>-.+?)?\.7z$")
+
+                    If Not assetMatch.Success Then Continue For
+                    If Not assetPlatforms.Contains(assetMatch.Groups("platform").Value, StringComparer.OrdinalIgnoreCase) Then Continue For
+
+                    Dim type = assetMatch.Groups("type").Value
                     Dim releaseType = If(type = "-UPDATE", "tool including update",
                                         If(type = "-EXE", "hotfix/update", "release"))
-                    Dim onlineVersionString = linkMatch.Groups("version").Value
+                    Dim onlineVersionString = assetMatch.Groups("version").Value
                     Dim onlineVersion = Version.Parse(onlineVersionString)
                     Dim releaseUri = $"https://github.com/m00nxx/StaxRip2/releases/tag/{tag}"
 

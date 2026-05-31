@@ -113,13 +113,20 @@ Public Class JobManager
         If File.Exists(jobsPath) Then
             While True
                 Try
+                    Dim deserializationException As Exception = Nothing
+
                     Using stream As New FileStream(jobsPath, FileMode.Open, FileAccess.Read, FileShare.Read)
                         Try
                             Return DirectCast(formatter.Deserialize(stream), List(Of Job))
                         Catch ex As Exception
-                            Return New List(Of Job)
+                            deserializationException = ex
                         End Try
                     End Using
+
+                    If deserializationException IsNot Nothing Then
+                        PreserveCorruptJobsFile(jobsPath, deserializationException)
+                        Return New List(Of Job)
+                    End If
 
                     Exit While
                 Catch ex As Exception
@@ -128,7 +135,7 @@ Public Class JobManager
 
                     If counter > 9 Then
                         g.ShowException(ex, "Failed to load job file", jobsPath)
-                        FileHelp.Delete(jobsPath)
+                        PreserveCorruptJobsFile(jobsPath, ex)
                         Exit While
                     End If
                 End Try
@@ -137,6 +144,25 @@ Public Class JobManager
 
         Return New List(Of Job)
     End Function
+
+    Private Shared Sub PreserveCorruptJobsFile(jobsPath As String, ex As Exception)
+        If Not File.Exists(jobsPath) Then Return
+
+        Dim corruptPath = Path.Combine(
+            jobsPath.Dir,
+            $"Jobs.dat.corrupt.{DateTime.Now:yyyyMMddHHmmss}")
+
+        If File.Exists(corruptPath) Then
+            corruptPath += "." + Guid.NewGuid().ToString("N")
+        End If
+
+        Try
+            File.Move(jobsPath, corruptPath)
+            g.ShowException(ex, "Failed to load job file", "The corrupt job file was preserved as:" + BR + corruptPath)
+        Catch moveException As Exception
+            g.ShowException(moveException, "Failed to preserve corrupt job file", jobsPath)
+        End Try
+    End Sub
 
     Shared Sub SaveJobs(jobs As List(Of Job))
         Dim counter As Integer = 0

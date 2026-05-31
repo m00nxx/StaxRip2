@@ -12,6 +12,8 @@ Versioning note: StaxRip2 uses its own `0.x` release line. The first public Stax
 
 Settings note: StaxRip2 uses its own settings registry key and does not reuse the original StaxRip settings location. If an incompatible legacy `Settings.dat` from StaxRip is found in the selected settings folder, it is moved aside and StaxRip2 starts with fresh settings.
 
+Security note: project, template, job, and settings files are intended for trusted local workflows. Do not open `.srip`, `.dat`, or settings files from untrusted sources.
+
 -------------
 
 [![GitHub Release](https://img.shields.io/github/v/release/m00nxx/StaxRip2?style=plastic&logo=Github&logoColor=white&label=Release&labelColor=hsl(210%2C%2060%25%2C%2050%25)&color=hsl(110%2C%2060%25%2C%2050%25))](https://github.com/m00nxx/StaxRip2/releases/latest)

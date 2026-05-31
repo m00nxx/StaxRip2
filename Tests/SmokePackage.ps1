@@ -8,6 +8,8 @@ param(
     [int] $CompressionLevel = 5,
     [ValidateRange(1, 3600)]
     [int] $ArchiveReadyTimeoutSeconds = 300,
+    [string] $RuntimePayloadArchive = "",
+    [string] $RuntimePayloadUrl = "",
     [switch] $SkipBuild,
     [switch] $SkipArchive,
     [switch] $KeepStaging,
@@ -288,6 +290,8 @@ function Assert-FullRuntimeStaging {
         "Apps\Support\MKVToolNix\mkvmerge.exe",
         "Apps\FrameServer\VapourSynth\VSPipe.exe",
         "Apps\Encoders\x265\x265.exe",
+        "Fonts\Default\Anuphan\Anuphan-VariableFont_wght.ttf",
+        "Fonts\Code\Roboto_Mono\RobotoMono-VariableFont_wght.ttf",
         "Settings\Templates\Automatic Workflow.srip",
         "Settings\Templates\Manual Workflow.srip",
         "Settings\Templates\Re-mux.srip"
@@ -305,6 +309,8 @@ function Assert-FullRuntimeArchive {
         "Apps[\\/]Support[\\/]MKVToolNix[\\/]mkvmerge\.exe$",
         "Apps[\\/]FrameServer[\\/]VapourSynth[\\/]VSPipe\.exe$",
         "Apps[\\/]Encoders[\\/]x265[\\/]x265\.exe$",
+        "Fonts[\\/]Default[\\/]Anuphan[\\/]Anuphan-VariableFont_wght\.ttf$",
+        "Fonts[\\/]Code[\\/]Roboto_Mono[\\/]RobotoMono-VariableFont_wght\.ttf$",
         "Settings[\\/]Templates[\\/]Automatic Workflow\.srip$",
         "Settings[\\/]Templates[\\/]Manual Workflow\.srip$",
         "Settings[\\/]Templates[\\/]Re-mux\.srip$"
@@ -334,6 +340,12 @@ if ($MSBuildPath) {
 }
 if ($SevenZipPath) {
     $releaseArgs += @("-SevenZipPath", $SevenZipPath)
+}
+if ($RuntimePayloadArchive) {
+    $releaseArgs += @("-RuntimePayloadArchive", $RuntimePayloadArchive)
+}
+if ($RuntimePayloadUrl) {
+    $releaseArgs += @("-RuntimePayloadUrl", $RuntimePayloadUrl)
 }
 if ($SkipBuild) {
     $releaseArgs += "-SkipBuild"

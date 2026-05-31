@@ -76,7 +76,7 @@ StaxRip2 includes startup guards for missing `Fonts` and `Apps/Conf` folders, bu
 
 ## Full Release Package
 
-Use `Source/Release.ps1` from a source tree that already has the full runtime payload under `Source/bin`.
+Use `Source/Release.ps1` from a source tree that already has the full runtime payload under `Source/bin`, or bootstrap the runtime folders from a previous StaxRip2 release archive.
 
 Required runtime folders include:
 
@@ -90,6 +90,20 @@ Example:
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File Source/Release.ps1 -Platform x64
 ```
+
+From a clean checkout, use a local previous release archive:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Source/Release.ps1 -Platform x64 -RuntimePayloadArchive C:\Downloads\StaxRip2-v0.1.5-x64.7z
+```
+
+Or use a previous release URL:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Source/Release.ps1 -Platform x64 -RuntimePayloadUrl https://github.com/m00nxx/StaxRip2/releases/download/v0.1.5/StaxRip2-v0.1.5-x64.7z
+```
+
+Runtime payload bootstrapping imports only runtime folders such as `Apps`, `Fonts`, and `Settings/Templates`; it does not replace the freshly built `StaxRip2.exe`.
 
 Before publishing a package, run the package smoke checks:
 
@@ -105,6 +119,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File Tests/SmokePackage.ps1 -Plat
 
 Use `-CompressionLevel 0..9` if you need to trade package size for packaging speed. The default is `5`.
 
-For `v0.1.5`, the release archive is expected to be named `StaxRip2-v0.1.5-x64.7z`.
+For `v0.1.6`, the release archive is expected to be named `StaxRip2-v0.1.6-x64.7z`.
 
-The GitHub Actions workflow intentionally publishes only an app-only artifact. Full release packaging is local until the runtime payload is made reproducible from a clean checkout.
+The GitHub Actions workflow intentionally publishes only an app-only artifact. Full release packaging is local, but it can be reproduced from a clean checkout by passing `-RuntimePayloadArchive` or `-RuntimePayloadUrl` for a previous full StaxRip2 release archive.

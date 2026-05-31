@@ -212,10 +212,7 @@ Public Class ProcessHelp
             Dim stderrTask = proc.StandardError.ReadToEndAsync()
 
             If Not proc.WaitForExit(timeoutMilliseconds) Then
-                Try
-                    proc.Kill()
-                Catch
-                End Try
+                KillProcessAndChildren(proc.Id)
 
                 Throw New TimeoutException($"Process timed out after {timeoutMilliseconds} ms: {file} {arguments}")
             End If
@@ -228,12 +225,18 @@ Public Class ProcessHelp
         Return If(ret, "")
     End Function
 
-    Sub KillProcessAndChildren(pid As Integer)
-        Dim searcher As New ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" & pid)
-        Dim moc As ManagementObjectCollection = searcher.[Get]()
-        For Each mo As ManagementObject In moc
-            KillProcessAndChildren(Convert.ToInt32(mo("ProcessID")))
-        Next
+    Shared Sub KillProcessAndChildren(pid As Integer)
+        Try
+            Using searcher As New ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" & pid)
+                Using moc As ManagementObjectCollection = searcher.Get()
+                    For Each mo As ManagementObject In moc
+                        KillProcessAndChildren(Convert.ToInt32(mo("ProcessID")))
+                    Next
+                End Using
+            End Using
+        Catch
+        End Try
+
         Try
             Dim proc As Process = Process.GetProcessById(pid)
             proc.Kill()
